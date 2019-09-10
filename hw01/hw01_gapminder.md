@@ -28,9 +28,14 @@ refined_data <- col_data %>%
 
 ### Create scatterplot
 
+#### Note: requires plotrix package.
+
 ``` r
 attach(refined_data) # Defines dataset as current object
-plot(year, lifeExp, main="Canadian Life Expectancy from 1952 to 2007", xlab="Year",ylab="Life Expectancy (years)", pch=20, xlim=NULL,ylim=c(68,82))
+plot_title <- "Canadian Life Expectancy from 1952 to 2007"
+x_title <- "Year"
+y_title <- "Life Expectancy (years)"
+plot(year, lifeExp, main=plot_title, xlab=x_title,ylab=y_title)
 
 # Add line of best fit:
 fit <- lm(lifeExp~year)
@@ -50,4 +55,4 @@ plotrix::corner.label(rsq_label)
     ## [1] 1949.8
     ## 
     ## $y
-    ## [1] 82.56
+    ## [1] 81.12912
