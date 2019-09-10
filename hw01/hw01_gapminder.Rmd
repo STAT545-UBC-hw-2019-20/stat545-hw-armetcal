@@ -6,7 +6,6 @@ output: github_document
 ---
 
 ```{r package_load, warning=FALSE, include=FALSE}
-library(DT)
 library(gapminder)
 library(tibble)
 library(dplyr)
