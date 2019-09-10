@@ -38,6 +38,8 @@ refined_data <- col_data %>%
 
 ## Create scatterplot
 ```{r Life_vs_Year}
-
+attach(refined_data)
+plot(year, lifeExp, main="Canadian Life Expectancy from 1952 to 2007", xlab="Year",ylab="Life Expectancy (years)")
+abline(lm(lifeExp~year), col="red")
 ```
 
