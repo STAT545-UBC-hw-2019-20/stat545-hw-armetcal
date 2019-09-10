@@ -40,6 +40,11 @@ refined_data <- col_data %>%
 ```{r Life_vs_Year}
 attach(refined_data)
 plot(year, lifeExp, main="Canadian Life Expectancy from 1952 to 2007", xlab="Year",ylab="Life Expectancy (years)")
-abline(lm(lifeExp~year), col="red")
+fit <- lm(lifeExp~year)
+abline(fit, col="red")
+rsq <- summary(fit)$adj.r.squared %>% 
+  format(digits=3) %>% 
+  as.character()
+rsq_label <- paste("R^2: ",rsq)
+plotrix::corner.label(rsq_label)
 ```
-
