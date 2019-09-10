@@ -1,0 +1,43 @@
+---
+title: "hw01_gapminder"
+author: "Avril Metcalfe-Roach"
+output: github_document:
+  keep_md: true
+  theme: yeti
+  toc: true
+  toc_float: true
+---
+
+```{r package_load, warning=FALSE, echo=FALSE}
+library(DT)
+library(gapminder)
+library(tibble)
+library(dplyr)
+```
+
+# Let's see the preliminary ugly dataset!
+```{r raw_data}
+raw_data <- gapminder %>% 
+  as_tibble()
+```
+
+# Plotting Canadian life expectancy from 1952 to 2007
+
+## Isolate Country, Life Exp, and Year columns
+```{r sel_col}
+col_data <- raw_data %>% 
+  select(country,year,lifeExp)
+```
+
+
+## Isolate Canadian data only
+```{r isolate_Canada}
+refined_data <- col_data %>% 
+  filter(country=="Canada")
+```
+
+## Create scatterplot
+```{r Life_vs_Year}
+
+```
+
