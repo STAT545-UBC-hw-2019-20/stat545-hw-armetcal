@@ -2,7 +2,9 @@
 title: "hw01_presentation"
 author: "Avril Metcalfe-Roach"
 date: "10 September 2019"
-output: ioslides_presentation
+output:
+  beamer_presentation: default
+  ioslides_presentation: default
 ---
 ## Loading the necessary packages
 ```{r package_load, warning=FALSE}
@@ -38,11 +40,12 @@ refined_data <- col_data %>%
 ### Create scatterplot
 *Note: requires plotrix package.*
 ```{r Life_vs_Year}
-attach(refined_data) # Defines dataset as current object
-plot_title <- "Canadian Life Expectancy from 1952 to 2007"
+attach(refined_data) # Defines dataset as current obj.
+plot_title <- "Canadian Life Expectancy, 1952-2007"
 x_title <- "Year"
 y_title <- "Life Expectancy (years)"
-p <- plot(year, lifeExp, main=plot_title, xlab=x_title,ylab=y_title)
+p <- plot(year, lifeExp, main=plot_title, 
+          xlab=x_title,ylab=y_title)
 
 # Add line of best fit:
 fit <- lm(lifeExp~year)
