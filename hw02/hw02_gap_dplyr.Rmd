@@ -18,3 +18,12 @@ library(gapminder)
 
 ## 1.1 - Subset gapminder to 3 countries, 1970s.
 ### Countries: Canada, India, Italy
+```{r 1.1}
+raw_data <- gapminder %>% 
+  as_tibble()
+filtered <- raw_data %>% 
+  filter(country %in% c("Canada","India","Italy"), 
+         year %in% c(1970:1979))
+head(filtered, 10)
+```
+
