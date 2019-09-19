@@ -32,3 +32,13 @@ country_gdp <- filtered %>%
 ## 1.3 - Countries with drops in life expectancy
 
 ### Note: Countries are included if they have ever experienced a recorded drop in life expectancy.
+
+``` r
+exp_list <- gapminder$lifeExp
+change <- diff(exp_list,lag=1,differences=1)
+# Add NA value to beginning of change vector:
+change_2 <- append(change,NA,after=0)
+# Create new tibble with delta life expectancy as a column:
+gapminder_lifeExp <- gapminder
+gapminder_lifeExp$delta <- change_2
+```
