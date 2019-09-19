@@ -70,3 +70,20 @@ max_per_country <- gap_max_gdp %>%
   filter(gdpPercap == max_gdp) %>% 
   subset(select = -max_gdp)
 ```
+
+## 1.5 - Canadian Life Expectancy vs GDP
+
+``` r
+# Select data
+canadians <- gapminder %>% 
+  filter(country=="Canada") %>% 
+  select(lifeExp,gdpPercap)
+
+# Plot in ggplot
+ggplot(canadians, aes(gdpPercap,lifeExp)) +
+  geom_point(alpha=0.2) +
+  scale_x_log10("GDP per capita ($)") +
+  ylab("Life Expectancy (years)")
+```
+
+![](hw02_gap_dplyr_files/figure-gfm/1.5-1.png)<!-- -->
