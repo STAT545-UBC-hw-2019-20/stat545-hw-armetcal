@@ -81,9 +81,22 @@ canadians <- gapminder %>%
 
 # Plot in ggplot
 ggplot(canadians, aes(gdpPercap,lifeExp)) +
-  geom_point(alpha=0.2) +
+  geom_point(alpha=0.5, colour = "red") +
   scale_x_log10("GDP per capita ($)") +
   ylab("Life Expectancy (years)")
 ```
 
 ![](hw02_gap_dplyr_files/figure-gfm/1.5-1.png)<!-- -->
+
+# Exercise 2: Explore individual variables with dplyr
+
+## Categorical variable: continent
+
+### Possible range of continent
+
+  - Assuming we’re not creating any new continents, this variable is
+    inherently limited to the seven continents.
+  - Possibilities: c(Asia, North America, South America, Europe, Africa,
+    Australia, Antarctica)
+
+## Quantitative variable: pop (population)
