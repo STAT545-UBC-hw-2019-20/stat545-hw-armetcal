@@ -10,17 +10,7 @@ Avril Metcalfe-Roach
 ``` r
 raw_data <- gapminder %>% 
   as_tibble()
-head(raw_data, 5)
 ```
-
-    ## # A tibble: 5 x 6
-    ##   country     continent  year lifeExp      pop gdpPercap
-    ##   <fct>       <fct>     <int>   <dbl>    <int>     <dbl>
-    ## 1 Afghanistan Asia       1952    28.8  8425333      779.
-    ## 2 Afghanistan Asia       1957    30.3  9240934      821.
-    ## 3 Afghanistan Asia       1962    32.0 10267083      853.
-    ## 4 Afghanistan Asia       1967    34.0 11537966      836.
-    ## 5 Afghanistan Asia       1972    36.1 13079460      740.
 
 ## 1.1 - Subset gapminder to 3 countries, 1970s.
 
@@ -30,18 +20,7 @@ head(raw_data, 5)
 filtered <- raw_data %>% 
   filter(country %in% c("Canada","India","Italy"), 
          year %in% c(1970:1979))
-filtered
 ```
-
-    ## # A tibble: 6 x 6
-    ##   country continent  year lifeExp       pop gdpPercap
-    ##   <fct>   <fct>     <int>   <dbl>     <int>     <dbl>
-    ## 1 Canada  Americas   1972    72.9  22284500    18971.
-    ## 2 Canada  Americas   1977    74.2  23796400    22091.
-    ## 3 India   Asia       1972    50.7 567000000      724.
-    ## 4 India   Asia       1977    54.2 634000000      813.
-    ## 5 Italy   Europe     1972    72.2  54365564    12269.
-    ## 6 Italy   Europe     1977    73.5  56059245    14256.
 
 ## 1.2 - Select country, gdpPercap using %\>%
 
@@ -71,20 +50,23 @@ change_2 <- append(change,NA,after=0)
 # Create new tibble with delta life expectancy as a column:
 gapminder_lifeExp <- gapminder
 gapminder_lifeExp$delta <- change_2
-head(gapminder_lifeExp,5)
-```
 
-    ## # A tibble: 5 x 7
-    ##   country     continent  year lifeExp      pop gdpPercap delta
-    ##   <fct>       <fct>     <int>   <dbl>    <int>     <dbl> <dbl>
-    ## 1 Afghanistan Asia       1952    28.8  8425333      779. NA   
-    ## 2 Afghanistan Asia       1957    30.3  9240934      821.  1.53
-    ## 3 Afghanistan Asia       1962    32.0 10267083      853.  1.66
-    ## 4 Afghanistan Asia       1967    34.0 11537966      836.  2.02
-    ## 5 Afghanistan Asia       1972    36.1 13079460      740.  2.07
-
-``` r
 # NOTE: INCLUDES APPARENT REDUCTIONS IN LIFE EXP DUE TO SWITCHING COUNTRIES!!!
 gapminder_redExp <- gapminder_lifeExp %>% 
   filter(delta < 0)
+```
+
+## 1.4 - Gapminder: max GDP per capita per country
+
+``` r
+# Create new column that lists the max GDP per country
+gap_max_gdp <- gapminder %>% 
+  group_by(country) %>% 
+  mutate(max(gdpPercap)) %>% 
+  ungroup()
+
+# Filters gapminder to only show max GDP; removes the redundant 'max GDP' column
+max_per_country <- gap_max_gdp %>% 
+  filter(gdpPercap == gap_max_gdp$`max(gdpPercap)`) %>% 
+  subset(select = -`max(gdpPercap)`)
 ```

@@ -17,7 +17,6 @@ library(gapminder)
 ```{r as_tibble}
 raw_data <- gapminder %>% 
   as_tibble()
-head(raw_data, 5)
 ```
 
 
@@ -27,7 +26,6 @@ head(raw_data, 5)
 filtered <- raw_data %>% 
   filter(country %in% c("Canada","India","Italy"), 
          year %in% c(1970:1979))
-filtered
 ```
 
 ## 1.2 - Select country, gdpPercap using %>%
@@ -46,10 +44,24 @@ change_2 <- append(change,NA,after=0)
 # Create new tibble with delta life expectancy as a column:
 gapminder_lifeExp <- gapminder
 gapminder_lifeExp$delta <- change_2
-head(gapminder_lifeExp,5)
 
 # NOTE: INCLUDES APPARENT REDUCTIONS IN LIFE EXP DUE TO SWITCHING COUNTRIES!!!
 gapminder_redExp <- gapminder_lifeExp %>% 
   filter(delta < 0)
 ```
+
+## 1.4 - Gapminder: max GDP per capita per country
+```{r 1.4}
+# Create new column that lists the max GDP per country
+gap_max_gdp <- gapminder %>% 
+  group_by(country) %>% 
+  mutate(max(gdpPercap)) %>% 
+  ungroup()
+
+# Filters gapminder to only show max GDP; removes the redundant 'max GDP' column
+max_per_country <- gap_max_gdp %>% 
+  filter(gdpPercap == gap_max_gdp$`max(gdpPercap)`) %>% 
+  subset(select = -`max(gdpPercap)`)
+```
+
 
