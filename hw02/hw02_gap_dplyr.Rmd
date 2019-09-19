@@ -55,13 +55,13 @@ gapminder_redExp <- gapminder_lifeExp %>%
 # Create new column that lists the max GDP per country
 gap_max_gdp <- gapminder %>% 
   group_by(country) %>% 
-  mutate(max(gdpPercap)) %>% 
+  mutate(max_gdp = max(gdpPercap)) %>% 
   ungroup()
 
 # Filters gapminder to only show max GDP; removes the redundant 'max GDP' column
 max_per_country <- gap_max_gdp %>% 
-  filter(gdpPercap == gap_max_gdp$`max(gdpPercap)`) %>% 
-  subset(select = -`max(gdpPercap)`)
+  filter(gdpPercap == max_gdp) %>% 
+  subset(select = -max_gdp)
 ```
 
 
