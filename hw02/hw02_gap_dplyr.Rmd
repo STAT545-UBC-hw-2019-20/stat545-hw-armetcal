@@ -76,15 +76,51 @@ ggplot(canadians, aes(gdpPercap,lifeExp)) +
   geom_point(alpha=0.5, colour = "red") +
   scale_x_log10("GDP per capita ($)") +
   ylab("Life Expectancy (years)")
-
 ```
 
 # Exercise 2: Explore individual variables with dplyr
 
 ## Categorical variable: continent
+
 ### Possible range of continent
 - Assuming we're not creating any new continents, this variable is inherently limited to the seven continents.
-- Possibilities: c(Asia, North America, South America, Europe, Africa, Australia, Antarctica)
+    - *Note*: North & South America are grouped into 'Americas'
+- Possibilities: c(**Asia, Americas, Europe, Africa, Oceania**, Antarctica)
+    - *Note*: Antarctica has no entries in gapminder, as it is a research base.
+
+### Spread of values
+Box and Whisker summary of data:
+```{r con_values}
+con_only <- raw_data %>% #gapminder as tibble
+  select(continent)
+con_sum <- count(con_only, continent) %>%  # dplyr: table of counts per continent
+  as_tibble()
+print(summary(con_sum))
+boxplot(con_sum$n, 
+        ylab="Number of data entries",
+        xlab = "Continents")
+```
+
+The number of datapoints for each populated continent (e.g. Antarctica not included) **ranged from 24 to 624**. 
+The **mean and median were 341 and 360** respectively, with 50% of the data falling between 300 and 396 entries.
+
+Visual representation of distribution:
+```{r con_graphs}
+bar_plot <- ggplot(con_sum, aes(continent,n)) +
+  geom_col(colour="black",fill="blue") +
+  geom_text(aes(label=n), vjust=-0.25) +
+  ylab("# of Entries") +
+  xlab("Continent")
+
+pie_plot <- ggplot(con_sum, aes(x='',y=n,fill=continent)) +
+  geom_bar(width=1, stat = "identity") +
+  coord_polar(theta="y")
+
+require(gridExtra)
+gridExtra::grid.arrange(bar_plot,pie_plot,ncol=2)
+```
+
+Generally, Oceania is very underrepresented, comprising just 24 out of 1704 entries. Conversely, African data was included at twice the rate of the average at 624 entries. The other three continents are relatively evenly represented.
 
 
 ## Quantitative variable: pop (population)
