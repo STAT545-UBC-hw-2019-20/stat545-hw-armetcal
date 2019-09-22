@@ -172,3 +172,98 @@ the average at 624 entries. The other three continents are relatively
 evenly represented.
 
 ## Quantitative variable: pop (population)
+
+### Range of pop
+
+The value of pop must be a Natural (\>0) number. No strict upper limit
+is specified, but should logically be approximately 1.4 billion (the
+population of China).
+
+``` r
+pop_only <- raw_data %>% # gapminder as tibble
+  select(pop)
+print(summary(pop_only))
+```
+
+    ##       pop           
+    ##  Min.   :6.001e+04  
+    ##  1st Qu.:2.794e+06  
+    ##  Median :7.024e+06  
+    ##  Mean   :2.960e+07  
+    ##  3rd Qu.:1.959e+07  
+    ##  Max.   :1.319e+09
+
+``` r
+boxplot(pop_only$pop, 
+        ylab="Population",
+        xlab = "")
+```
+
+![](hw02_gap_dplyr_files/figure-gfm/pop_range-1.png)<!-- -->
+
+As demonstrated by the boxplot, the vast majority of the data (all data
+within the whiskers/confidence interval) comprise a tiny fraction of the
+possible range of population values. 50% of the data decribes a
+population between 2.8-19.6 million, with the median population being 7
+million. The average is much higher at 29.6 million as the
+high-population outliers are skewing the data. The minimum and maximum
+populations are 60 000 and 1.32 billion respectively.
+
+There are 12 entries for each country, as they were sampled at every
+time point. We can divide the data by year to see how the average
+populations change over time:
+
+``` r
+pop_time <- raw_data %>% # raw_data is gapminder in tibble format 
+  select(year, pop)
+pop_time$year <- as.factor(pop_time$year)
+pop_time_plot <- ggplot(pop_time, aes(year, pop)) +
+  geom_boxplot() +
+  xlab("Year") +
+  ylab("Population")
+print(pop_time_plot)
+```
+
+![](hw02_gap_dplyr_files/figure-gfm/pop_over_time-1.png)<!-- -->
+
+The above graph makes it easier to see that there are only a handful of
+countries that have populations significantly above the statistical
+range. The significant population size and fast growth of China and
+India in particular make the population growth of the rest of the world
+less apparent.
+
+In order to better see the change in population spread over time, we
+will remove China and India from the analysis:
+
+``` r
+# Method 1: Determine smallest recorded population of China & India, change graph parameters
+india_min_pop <- raw_data %>% 
+  filter(country=="India" | country=="China") %>% 
+  select(pop) %>% 
+  min()
+none_1 <- pop_time_plot + 
+  ylim(NA, (india_min_pop-1)) + # subtract 1 so that no points are included
+  ggtitle("Method 1 - Modify Graph")
+
+# Method 2: Remove India and China from dataset
+no_in_chi <- raw_data %>% 
+  filter(country != "India" & country!="China")
+no_in_chi$year <- as.factor(no_in_chi$year)
+none_2 <- ggplot(no_in_chi, aes(year, pop)) +
+  geom_boxplot() +
+  xlab("Year") +
+  ylab("Population") +
+  ggtitle("Method 2 - Modify Dataset")
+
+require(gridExtra)
+gridExtra::grid.arrange(none_1,none_2,nrow=2)
+```
+
+    ## Warning: Removed 24 rows containing non-finite values (stat_boxplot).
+
+![](hw02_gap_dplyr_files/figure-gfm/no_InChi-1.png)<!-- -->
+
+Method 2 is somewhat aesthetically superior, as the y axis is
+automatically optimized. General trends are now more apparent: the IQR
+(middle 50%) of the data becomes more spread out over time and moves up
+the y axis, showing exponential population growth.
