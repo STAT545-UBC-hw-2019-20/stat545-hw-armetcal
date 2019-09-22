@@ -58,6 +58,8 @@ gapminder_redExp <- gapminder_lifeExp %>%
 
 ## 1.4 - Gapminder: max GDP per capita per country
 
+*Original question (using group\_by())*
+
 ``` r
 # Create new column that lists the max GDP per country
 gap_max_gdp <- gapminder %>% 
@@ -214,56 +216,150 @@ time point. We can divide the data by year to see how the average
 populations change over time:
 
 ``` r
+# Linear Plot
 pop_time <- raw_data %>% # raw_data is gapminder in tibble format 
   select(year, pop)
 pop_time$year <- as.factor(pop_time$year)
 pop_time_plot <- ggplot(pop_time, aes(year, pop)) +
   geom_boxplot() +
   xlab("Year") +
-  ylab("Population")
-print(pop_time_plot)
+  ylab("Population") +
+  ggtitle("Linear")
+
+# Log Transformed
+log_plot <- pop_time_plot + 
+  scale_y_log10() +
+  ggtitle("Logarithmic")
+
+# Side by Side Output
+require(gridExtra)
+gridExtra::grid.arrange(pop_time_plot,log_plot,nrow=2)
 ```
 
 ![](hw02_gap_dplyr_files/figure-gfm/pop_over_time-1.png)<!-- -->
 
-The above graph makes it easier to see that there are only a handful of
-countries that have populations significantly above the statistical
-range. The significant population size and fast growth of China and
-India in particular make the population growth of the rest of the world
-less apparent.
+The above graph makes it easier to see that there are only a couple of
+countries that have populations significantly outside of the statistical
+range. In the linear plot, the significant population size and fast
+growth of China and India in particular make the population growth of
+the rest of the world less apparent. By transforming the y axis to a log
+10 scale, all of the outliers can be captured and the general trends
+become apparent: the IQR (middle 50%) of the data moves up the y axis,
+showing exponential population growth.
 
-In order to better see the change in population spread over time, we
-will remove China and India from the analysis:
+# Exercise 3: Plot Exploration
+
+## Scatterplot of \[CO2\]ambient vs \[CO2\]uptake
+
+Dataset: **CO2 - *Carbon Dioxide Uptake in Grass Plants*** Here are the
+main parameters of the CO2 dataset:
 
 ``` r
-# Method 1: Determine smallest recorded population of China & India, change graph parameters
-india_min_pop <- raw_data %>% 
-  filter(country=="India" | country=="China") %>% 
-  select(pop) %>% 
-  min()
-none_1 <- pop_time_plot + 
-  ylim(NA, (india_min_pop-1)) + # subtract 1 so that no points are included
-  ggtitle("Method 1 - Modify Graph")
-
-# Method 2: Remove India and China from dataset
-no_in_chi <- raw_data %>% 
-  filter(country != "India" & country!="China")
-no_in_chi$year <- as.factor(no_in_chi$year)
-none_2 <- ggplot(no_in_chi, aes(year, pop)) +
-  geom_boxplot() +
-  xlab("Year") +
-  ylab("Population") +
-  ggtitle("Method 2 - Modify Dataset")
-
-require(gridExtra)
-gridExtra::grid.arrange(none_1,none_2,nrow=2)
+summary(CO2)
 ```
 
-    ## Warning: Removed 24 rows containing non-finite values (stat_boxplot).
+    ##      Plant             Type         Treatment       conc     
+    ##  Qn1    : 7   Quebec     :42   nonchilled:42   Min.   :  95  
+    ##  Qn2    : 7   Mississippi:42   chilled   :42   1st Qu.: 175  
+    ##  Qn3    : 7                                    Median : 350  
+    ##  Qc1    : 7                                    Mean   : 435  
+    ##  Qc3    : 7                                    3rd Qu.: 675  
+    ##  Qc2    : 7                                    Max.   :1000  
+    ##  (Other):42                                                  
+    ##      uptake     
+    ##  Min.   : 7.70  
+    ##  1st Qu.:17.90  
+    ##  Median :28.30  
+    ##  Mean   :27.21  
+    ##  3rd Qu.:37.12  
+    ##  Max.   :45.50  
+    ## 
 
-![](hw02_gap_dplyr_files/figure-gfm/no_InChi-1.png)<!-- -->
+Plant is the type of plant, Type is the location of the plant, conc is
+the ambient CO2 concentration, and uptake is the CO2 absorbed by the
+plant.
 
-Method 2 is somewhat aesthetically superior, as the y axis is
-automatically optimized. General trends are now more apparent: the IQR
-(middle 50%) of the data becomes more spread out over time and moves up
-the y axis, showing exponential population growth.
+``` r
+scatter <- CO2 %>% 
+  mutate(Group = (if_else
+                  (Type=="Quebec",
+                    if_else
+                    (Treatment=="nonchilled","Qnc","Qc"),
+                     if_else(Treatment=="nonchilled","Mnc","Mc"))))
+ggplot(scatter, aes(conc,uptake)) +
+  geom_point(aes(colour=(factor(Group))))
+```
+
+![](hw02_gap_dplyr_files/figure-gfm/scatterplot-1.png)<!-- -->
+
+The above graph shows the change in CO2 uptake as a function of CO2
+ambient concentration. In the legend, M/Q denote location (Mississippi
+vs Quebec) and c/nc denote treatment (chilled/not chilled).
+
+From the plot, it can be seen that Quebec plants are more efficient at
+carbon fixation than Mississippi plants, and chilling the plants reduces
+their efficiency.
+
+## Graph \#2
+
+Dataset: **esoph - *Smoking, Alcohol and (O)esophageal Cancer*** Here
+are the main parameters of the CO2 dataset:
+
+``` r
+esoph_cancer <- esoph %>% 
+  rename("Alcohol Intake"=alcgp) %>% 
+  rename("Tobacco Intake"=tobgp)
+summary(esoph_cancer)
+```
+
+    ##    agegp      Alcohol Intake  Tobacco Intake     ncases      
+    ##  25-34:15   0-39g/day:23     0-9g/day:24     Min.   : 0.000  
+    ##  35-44:15   40-79    :23     10-19   :24     1st Qu.: 0.000  
+    ##  45-54:16   80-119   :21     20-29   :20     Median : 1.000  
+    ##  55-64:16   120+     :21     30+     :20     Mean   : 2.273  
+    ##  65-74:15                                    3rd Qu.: 4.000  
+    ##  75+  :11                                    Max.   :17.000  
+    ##    ncontrols    
+    ##  Min.   : 1.00  
+    ##  1st Qu.: 3.00  
+    ##  Median : 6.00  
+    ##  Mean   :11.08  
+    ##  3rd Qu.:14.00  
+    ##  Max.   :60.00
+
+*Note: Ncases and ncontrols are not relevant here, as they supply
+weightings to the alcohol and tobacco groups.*
+
+We will be looking at the relationship between alcohol consumption and
+cancer rates over time.
+
+``` r
+p<-esoph_cancer %>% 
+  select(-`Tobacco Intake`)
+p2 <- aggregate(cbind(p$ncases,p$ncontrols),
+                by=list(esoph_cancer$agegp, esoph_cancer$`Alcohol Intake`), 
+                FUN=sum)
+
+esoph_format <- function(alcohol){
+  p2 %>% 
+    mutate(`Cancer Rate` = (V1/(V1+V2)*100)) %>% 
+    select(Group.1,Group.2,`Cancer Rate`) %>% 
+    filter(Group.2 == alcohol) %>% 
+    return()
+}
+
+esoph_39 <- esoph_format("0-39g/day")
+esoph_79 <- esoph_format("40-79")
+esoph_119 <- esoph_format("80-119")
+esoph_120 <- esoph_format("120+")
+
+esoph_pie <- function(df){
+  p3 <- ggplot(df, aes(x='',y='',fill=`Cancer Rate`)) +
+      geom_bar(width=1,stat="identity") +
+      coord_polar(theta="y")
+      return(p3)
+}
+esoph_pie(esoph_120)
+```
+
+![](hw02_gap_dplyr_files/figure-gfm/esoph_rates-1.png)<!-- -->
