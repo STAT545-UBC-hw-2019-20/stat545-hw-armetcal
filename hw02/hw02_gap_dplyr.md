@@ -334,32 +334,41 @@ We will be looking at the relationship between alcohol consumption and
 cancer rates over time.
 
 ``` r
-p<-esoph_cancer %>% 
+p <- esoph_cancer %>% 
   select(-`Tobacco Intake`)
 p2 <- aggregate(cbind(p$ncases,p$ncontrols),
-                by=list(esoph_cancer$agegp, esoph_cancer$`Alcohol Intake`), 
+                by=list(esoph_cancer$`Alcohol Intake`), 
                 FUN=sum)
 
-esoph_format <- function(alcohol){
-  p2 %>% 
-    mutate(`Cancer Rate` = (V1/(V1+V2)*100)) %>% 
-    select(Group.1,Group.2,`Cancer Rate`) %>% 
-    filter(Group.2 == alcohol) %>% 
-    return()
-}
+cases <- mutate(p2,status="case") %>% 
+  rename("total"=V1) %>% 
+  select(-V2)
+ctrls <- mutate(p2,status="ctrl") %>% 
+  rename("total"=V2) %>% 
+  select(-V1)
+all_data <- merge(cases,ctrls,all=TRUE)
 
-esoph_39 <- esoph_format("0-39g/day")
-esoph_79 <- esoph_format("40-79")
-esoph_119 <- esoph_format("80-119")
-esoph_120 <- esoph_format("120+")
+all_39 <- filter(all_data,Group.1=="0-39g/day")
+all_79 <- filter(all_data,Group.1=="40-79")
+all_119 <- filter(all_data,Group.1=="80-119")
+all_120 <- filter(all_data,Group.1=="120+")
 
 esoph_pie <- function(df){
-  p3 <- ggplot(df, aes(x='',y='',fill=`Cancer Rate`)) +
+  ggplot(df, aes(x='',y=total,fill=status,)) +
       geom_bar(width=1,stat="identity") +
-      coord_polar(theta="y")
-      return(p3)
+      coord_polar(theta="y") +
+      guides(fill = FALSE, color = FALSE, linetype = FALSE, shape = FALSE)
 }
-esoph_pie(esoph_120)
+
+g1 <- esoph_pie(all_39)
+g2 <- esoph_pie(all_79)
+g3 <- esoph_pie(all_119)
+g4 <- esoph_pie(all_120)
+
+require(gridExtra)
+gridExtra::grid.arrange(g1,g2,g3,g4,ncol=4)
 ```
 
 ![](hw02_gap_dplyr_files/figure-gfm/esoph_rates-1.png)<!-- -->
+
+Pink represents esophageal cancer, while blue are the controls.
