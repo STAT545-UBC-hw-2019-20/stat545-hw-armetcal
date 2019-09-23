@@ -94,7 +94,7 @@ ggplot(canadians, aes(gdpPercap,lifeExp)) +
 ### Spread of values
 Box and Whisker summary of data:
 ```{r con_values}
-con_only <- gapminder %>% #gapminder as tibble
+con_only <- gapminder %>%
   select(continent)
 con_sum <- count(con_only, continent) %>%  # dplyr: table of counts per continent
   as_tibble()
@@ -134,7 +134,7 @@ The value of pop must be a Natural (>0) number. No strict upper limit is specifi
 
 Visualizing the spread of all population data:
 ```{r pop_range, warning=FALSE}
-pop_only <- gapminder %>% # gapminder as tibble
+pop_only <- gapminder %>%
   select(pop)
 knitr::kable(summary(pop_only),format="markdown")
 boxplot(pop_only$pop, 
