@@ -272,4 +272,4 @@ In this way, all of the data are collected.
 
 # **Tibbles**
 All small tables as knitr::kable().
-**DT::datatable() only works in html; therefore, the .Rmd and html file on github contains datatable() format for large tables, but knitr:kable(head(10)) is used in the .md file.**
+**DT::datatable() only works in html; therefore, the .Rmd and html file on github contains datatable() format for large tables, but as_tibble() is used in the .md file.**
