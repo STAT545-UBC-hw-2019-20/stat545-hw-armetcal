@@ -1,0 +1,322 @@
+---
+title: "hw02_gap"
+author: "Avril Metcalfe-Roach"
+date: "18 September 2019"
+output: pdf_document
+---
+
+```{r include = FALSE}
+knitr::opts_chunk$set(echo=FALSE)
+```
+
+```{r libraries, warning=FALSE, include=FALSE}
+library(dplyr)
+library(tidyverse)
+library(gapminder)
+library(datasets) # For Q3
+```
+
+# **Exercise 1: Dplyr package**
+
+## 1.1 - Subset gapminder to 3 countries, 1970s.
+The Gapminder dataset was first sorted to include Canada, India, and Italy using the `filter()` function.
+
+```{r 1.1}
+filtered <- gapminder %>% 
+  filter(country %in% c("Canada","India","Italy"), 
+         year %in% c(1970:1979))
+knitr::kable(filtered, format="markdown")
+```
+
+## 1.2 - Select country, gdpPercap using %>%
+The above dataset was further modified to include only the variables *Country* and *GDP per capita*.
+
+```{r 1.2}
+country_gdp <- filtered %>% 
+  select(country,gdpPercap)
+knitr::kable(country_gdp, format="markdown")
+```
+
+\newpage
+## 1.3 - Entries with a negative change in life expectancy
+
+A new dataset was produced from gapminder that only includes entries where the *Life Expectancy* variable was less than in the previous line. Note that, though the data are arranged by country and then by year, this modification **does not take change of country into account**. Any lines where the year is **1952** (the earliest timepoint) indicates that the apparent decrease in life expectancy is due to the country having a smaller life expectancy than the preceding one.
+
+This was done by creating a vector of delta life expectancies using `diff()`, appending the column to gapminder, and then filtering for negative deltas.
+
+```{r 1.3}
+exp_list <- gapminder$lifeExp
+change <- diff(exp_list,lag=1,differences=1)
+# Add NA value to beginning of change vector:
+change_2 <- append(change,NA,after=0)
+# Create new tibble with delta life expectancy as a column:
+gapminder_lifeExp <- gapminder
+gapminder_lifeExp$delta <- change_2
+# Filter for ALL negative changes
+gapminder_redExp <- gapminder_lifeExp %>% 
+  filter(delta < 0)
+
+gapminder_redExp
+```
+
+## 1.4 - Gapminder: max GDP per capita per country
+*Original question (using group_by())*
+
+A new dataset was produced from gapminder that showed only entries with the highest GDP for each country. The command `group_by(country)` was used first, then `mutate(max_gdp = max(gdpPercap))` so that a new column was added that included the higest GDP on a per-country basis. 
+
+This dataset was then filtered to select only lines with GDPs that matched the maximum GDP. The redundant *max_gdp* column was then removed.
+
+```{r 1.4}
+# Create new column that lists the max GDP per country
+gap_max_gdp <- gapminder %>% 
+  group_by(country) %>% 
+  mutate(max_gdp = max(gdpPercap)) %>% 
+  ungroup()
+
+# Filters gapminder to only show max GDP; removes the redundant 'max GDP' column
+max_per_country <- gap_max_gdp %>% 
+  filter(gdpPercap == max_gdp) %>% 
+  subset(select = -max_gdp)
+
+max_per_country
+```
+\newpage
+## 1.5 - Canadian Life Expectancy vs GDP
+
+A plot was produced that investigates the connection between Canadian GDP (x axis) and life expectancy (y axis). When the x axis is transformed to log10, a strong upwards trend is seen between the variables, as shown by the line of best fit (blue).
+
+```{r 1.5}
+# Select data
+canadians <- gapminder %>% 
+  filter(country=="Canada") %>% 
+  select(lifeExp,gdpPercap)
+
+# Plot in ggplot
+ggplot(canadians, aes(gdpPercap,lifeExp)) +
+  geom_point(alpha=1, colour = "red") +
+  scale_x_log10("GDP per capita ($)",
+                breaks = scales::trans_breaks("log10", function(x) 10^x)) +
+  ylab("Life Expectancy (years)") +
+  geom_smooth(method='lm') +
+  ggtitle("Canadian Life Expectancy vs GDP",)
+```
+
+
+\newpage
+# **Exercise 2: Explore individual variables with dplyr**
+Two gapminder variables will be chosen and analyzed for range of values, spread, etc.
+
+## Categorical variable: *continent*
+
+### Possible range of continent
+- Assuming we're not creating any new continents, this variable is inherently limited to the seven continents.
+    - *Note*: North & South America are grouped into 'Americas'
+- Possibilities: **Asia, Americas, Europe, Africa, Oceania**, Antarctica
+    - *Note*: Antarctica has no entries in gapminder, as it is primarily a research base.
+
+### Analysis
+The *continent* variable was first summarized to give a count of how many entries belonged to each continent.
+
+```{r con_values}
+con_only <- gapminder %>%
+  select(continent)
+con_sum <- count(con_only, continent) %>%  # dplyr: table of counts per continent
+  as_tibble()
+knitr::kable(summary(con_sum),format="markdown") # Print summary of the data
+```
+
+The number of datapoints for each populated continent (e.g. Antarctica not included) **ranged from 24 to 624**. 
+The **mean and median were 341 and 360** respectively, with 50% of the data falling between 300 and 396 entries.
+
+In order to visualize the distribution of the datapoints to each continent, a bar plot and pie graph were constructed.
+
+```{r con_graphs, message=FALSE,fig.height=4,fig.width=10}
+bar_plot <- ggplot(con_sum, aes(continent,n)) +
+  geom_col(colour="black",fill="blue") +
+  geom_text(aes(label=n),hjust=-0.25) +
+  ylab("# of Entries") +
+  xlab("Continent") +
+  ylim(0,700) +
+  coord_flip() +
+  theme(aspect.ratio = 0.8) +
+  ggtitle("Distribution - Bar Plot")
+
+pie_plot <- ggplot(con_sum, aes(x='',y=n,fill=continent)) +
+  geom_bar(width=1, stat = "identity") +
+  coord_polar(theta="y") +
+  xlab("") +
+  ylab("") +
+  ggtitle("Distribution - Pie Chart")
+
+require(gridExtra) # Arrange them side by side
+gridExtra::grid.arrange(bar_plot,pie_plot,ncol=2)
+```
+
+Generally, Oceania is very underrepresented, comprising just 24 out of 1704 entries. Conversely, African data was included at twice the rate of the average at 624 entries. The other three continents are relatively evenly represented.
+
+
+## Quantitative variable: pop (population)
+
+### Range of pop
+The value of pop must be a Natural (>=0) number. No strict upper limit is specified, but should logically be approximately 1.4 billion (the current population of China).
+
+### Analysis
+The spread of all population data is presented here as a summary.
+
+```{r pop_range}
+pop_only <- gapminder %>%
+  select(pop)
+knitr::kable(summary(pop_only),format="markdown")
+```
+
+**50% of the data decribes a population between 2.8-19.6 million**, with the median population being **7 million**. The average is much higher at **29.6 million** as the high-population outliers are skewing the data. The minimum and maximum populations are **60 000 and 1.32 billion** respectively.
+
+This can be visualized in a boxplot:
+
+```{r,warning=FALSE}
+boxplot(pop_only$pop, 
+        ylab="Population",
+        xlab = "")
+```
+
+As demonstrated by the boxplot, the vast majority of the data (all data within the whiskers/confidence interval) comprise a tiny fraction of the possible range of population values. 
+
+There are 12 entries for each country, as they were sampled at every time point. We can divide the data by year to see how the **average populations change over time**:
+
+```{r pop_over_time}
+# Linear Plot
+pop_time <- gapminder %>% # gapminder is gapminder in tibble format 
+  select(year, pop)
+pop_time$year <- as.factor(pop_time$year) # Only factors can be used to plot side-by-side boxplots
+pop_time_plot <- ggplot(pop_time, aes(year, pop)) +
+  geom_boxplot() +
+  xlab("Year") +
+  ylab("Population") +
+  ggtitle("Linear")
+
+# Log Transformed
+log_plot <- pop_time_plot + 
+  scale_y_log10() +
+  ggtitle("Logarithmic")
+
+# Side by Side Output
+require(gridExtra)
+gridExtra::grid.arrange(pop_time_plot,log_plot,nrow=2)
+```
+ 
+The above graphs make it easier to see that there are only a couple of countries that have populations significantly outside of the statistical range. 
+
+In the linear plot, the significant population size and fast growth of China and India in particular make the population growth of the rest of the world less apparent. 
+
+By transforming the y axis to a log 10 scale, all of the outliers can be captured and the general trends become apparent: the **IQR (middle 50%) of the data moves up the y axis, showing exponential population growth**.
+
+\newpage
+# **Exercise 3: Plot Exploration**
+## Scatterplot of [CO2]ambient vs [CO2]uptake
+
+Dataset: __CO2 - *Carbon Dioxide Uptake in Grass Plants*__
+
+This dataset explores the relationship between ambient carbon dioxide levels and subssequent uptake in a variety of conditions. Here are the main parameters:
+
+```{r CO2_summary}
+knitr::kable(summary(CO2),format="markdown")
+```
+
+Plant is the type of plant, Type is the geographical location of the plant, Treatment is whether the plants were kept in a chilled environment, conc is the ambient CO2 concentration, and uptake is the CO2 absorbed by the plant.
+
+The following scatterplot shows the change in CO2 uptake as a function of CO2 ambient concentration:
+
+```{r scatterplot}
+CO2 %>% 
+  mutate(Group = (if_else
+                  (Type=="Quebec",
+                    if_else
+                    (Treatment=="nonchilled","Qnc","Qc"),
+                     if_else(Treatment=="nonchilled","Mnc","Mc")))) %>% 
+  ggplot(aes(conc,uptake)) +
+    geom_point(aes(colour=(factor(Group)))) +
+    ggtitle("CO2 Plant Uptake vs Ambient CO2 Levels")
+```
+
+In the legend, M/Q denote location (Mississippi vs Quebec) and c/nc denote treatment (chilled/not chilled).
+
+From the plot, it can be seen that Quebec plants are more efficient at carbon fixation than Mississippi plants, and chilling the plants reduces their efficiency.
+
+## Graph #2
+Dataset: __esoph - *Smoking, Alcohol and (O)esophageal Cancer*__
+
+This dataset explores the relationship between smoking/drinking alcohol and the development of esophageal cancer over several age groups. Here are its main parameters:
+
+```{r esoph_summary}
+esoph_cancer <- esoph %>% 
+  rename("Alcohol Intake"=alcgp) %>% 
+  rename("Tobacco Intake"=tobgp)
+
+knitr::kable(summary(esoph_cancer),format="markdown")
+```
+
+*Note: Ncases and ncontrols summaries are meaningless, as they supply weightings to the alcohol and tobacco groups.* 
+
+We will be looking at the **rate of esophageal cancer relative to alcohol consumption**, irrespective of age.
+
+```{r esoph_rates, fig.height=3,fig.width=12}
+# Collapse data: sum cases/controls by alcohol group
+p2 <- aggregate(cbind(esoph_cancer$ncases,esoph_cancer$ncontrols), 
+                by=list(esoph_cancer$`Alcohol Intake`), 
+                FUN=sum)
+
+cases <- mutate(p2,status="case") %>% 
+  rename("total"=V1) %>% 
+  select(-V2)
+ctrls <- mutate(p2,status="ctrl") %>% 
+  rename("total"=V2) %>% 
+  select(-V1)
+all_data <- merge(cases,ctrls,all=TRUE)
+
+all_39 <- filter(all_data,Group.1=="0-39g/day")
+all_79 <- filter(all_data,Group.1=="40-79")
+all_119 <- filter(all_data,Group.1=="80-119")
+all_120 <- filter(all_data,Group.1=="120+")
+
+esoph_pie <- function(df){
+  ggplot(df, aes(x='',y=total,fill=status,)) +
+      geom_bar(width=1,stat="identity") +
+      xlab("") +
+      ylab("") +
+      coord_polar(theta="y") +
+      guides(fill = FALSE, color = FALSE, linetype = FALSE, shape = FALSE) +
+      ggtitle(df$Group.1[1])
+}
+
+g1 <- esoph_pie(all_39)
+g2 <- esoph_pie(all_79)
+g3 <- esoph_pie(all_119)
+g4 <- esoph_pie(all_120)
+
+require(gridExtra)
+gridExtra::grid.arrange(g1,g2,g3,g4,ncol=4)
+```
+
+The esophageal cancer cases are represented by pink, while the controls are in blue. Titles indicate the number of grams of alcohol ingested per day. As the alcohol intake increases, so does the lifetime cancer rate.
+
+\newpage
+# **Recycling**
+Code in question:
+
+```{r recycling, echo=TRUE}
+filter(gapminder, country == c("Rwanda", "Afghanistan"))
+```
+
+Though at first glance this code appears to select the data for Afghanistan and Rwanda, but **half of the data is missing**. Every other entry is omitted, in a way where both countries are never represented in the same year. (ex. Rwanda 1952, Afghanistan 1957...)
+
+Because of the inclusion of a list, the function will go along the year-sorted data, taking turns selecting each country for each value of year. The code can be fixed by using an 'or' statement:
+
+```{r recycling_fix, echo=TRUE}
+filter(gapminder, country == "Rwanda" | country == "Afghanistan")
+```
+
+In this way, all of the data are collected.
+
+# **Tibbles**
+All small tables as knitr::kable().
+**DT::datatable() only works in html; therefore, the .Rmd and html file on github contains datatable() format for large tables, but as_tibble() is used in the .md file.**
