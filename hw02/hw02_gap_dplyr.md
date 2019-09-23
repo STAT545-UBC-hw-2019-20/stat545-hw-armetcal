@@ -40,7 +40,7 @@ country_gdp
     ## 5 Italy      12269.
     ## 6 Italy      14256.
 
-## 1.3 - Countries with drops in life expectancy
+## 1.3 - Entries with a negative change in life expectancy from previous line
 
 ``` r
 exp_list <- gapminder$lifeExp
@@ -50,8 +50,7 @@ change_2 <- append(change,NA,after=0)
 # Create new tibble with delta life expectancy as a column:
 gapminder_lifeExp <- gapminder
 gapminder_lifeExp$delta <- change_2
-
-# NOTE: INCLUDES APPARENT REDUCTIONS IN LIFE EXP DUE TO SWITCHING COUNTRIES!!!
+# Filter for negative changes
 gapminder_redExp <- gapminder_lifeExp %>% 
   filter(delta < 0)
 ```
@@ -113,7 +112,7 @@ con_only <- raw_data %>% #gapminder as tibble
   select(continent)
 con_sum <- count(con_only, continent) %>%  # dplyr: table of counts per continent
   as_tibble()
-print(summary(con_sum))
+print(summary(con_sum)) # Print summary of the data
 ```
 
     ##     continent       n        
@@ -125,7 +124,7 @@ print(summary(con_sum))
     ##               Max.   :624.0
 
 ``` r
-boxplot(con_sum$n, 
+boxplot(con_sum$n, #Visualize the summary in a boxplot
         ylab="Number of data entries",
         xlab = "Continents")
 ```
@@ -150,7 +149,7 @@ pie_plot <- ggplot(con_sum, aes(x='',y=n,fill=continent)) +
   geom_bar(width=1, stat = "identity") +
   coord_polar(theta="y")
 
-require(gridExtra)
+require(gridExtra) # Arrange them side by side
 ```
 
     ## Loading required package: gridExtra
@@ -181,6 +180,8 @@ The value of pop must be a Natural (\>0) number. No strict upper limit
 is specified, but should logically be approximately 1.4 billion (the
 population of China).
 
+Visualizing the spread of all population data:
+
 ``` r
 pop_only <- raw_data %>% # gapminder as tibble
   select(pop)
@@ -205,21 +206,21 @@ boxplot(pop_only$pop,
 
 As demonstrated by the boxplot, the vast majority of the data (all data
 within the whiskers/confidence interval) comprise a tiny fraction of the
-possible range of population values. 50% of the data decribes a
-population between 2.8-19.6 million, with the median population being 7
-million. The average is much higher at 29.6 million as the
+possible range of population values. **50% of the data decribes a
+population between 2.8-19.6 million**, with the median population being
+**7 million**. The average is much higher at **29.6 million** as the
 high-population outliers are skewing the data. The minimum and maximum
-populations are 60 000 and 1.32 billion respectively.
+populations are **60 000 and 1.32 billion** respectively.
 
 There are 12 entries for each country, as they were sampled at every
-time point. We can divide the data by year to see how the average
-populations change over time:
+time point. We can divide the data by year to see how the **average
+populations change over time**:
 
 ``` r
 # Linear Plot
 pop_time <- raw_data %>% # raw_data is gapminder in tibble format 
   select(year, pop)
-pop_time$year <- as.factor(pop_time$year)
+pop_time$year <- as.factor(pop_time$year) # Only factors can be used to plot side-by-side boxplots
 pop_time_plot <- ggplot(pop_time, aes(year, pop)) +
   geom_boxplot() +
   xlab("Year") +
@@ -244,10 +245,10 @@ range. In the linear plot, the significant population size and fast
 growth of China and India in particular make the population growth of
 the rest of the world less apparent. By transforming the y axis to a log
 10 scale, all of the outliers can be captured and the general trends
-become apparent: the IQR (middle 50%) of the data moves up the y axis,
-showing exponential population growth.
+become apparent: the **IQR (middle 50%) of the data moves up the y axis,
+showing exponential population growth**.
 
-# Exercise 3: Plot Exploration
+# **Exercise 3: Plot Exploration**
 
 ## Scatterplot of \[CO2\]ambient vs \[CO2\]uptake
 
@@ -327,16 +328,15 @@ summary(esoph_cancer)
     ##  3rd Qu.:14.00  
     ##  Max.   :60.00
 
-*Note: Ncases and ncontrols are not relevant here, as they supply
+*Note: Ncases and ncontrols summaries are meaningless, as they supply
 weightings to the alcohol and tobacco groups.*
 
-We will be looking at the relationship between alcohol consumption and
-cancer rates over time.
+We will be looking at the **rate of esophageal cancer relative to
+alcohol consumption** and irrespective of age.
 
 ``` r
-p <- esoph_cancer %>% 
-  select(-`Tobacco Intake`)
-p2 <- aggregate(cbind(p$ncases,p$ncontrols),
+# Collapse data: sum cases/controls by alcohol group
+p2 <- aggregate(cbind(esoph_cancer$ncases,esoph_cancer$ncontrols), 
                 by=list(esoph_cancer$`Alcohol Intake`), 
                 FUN=sum)
 
@@ -357,7 +357,8 @@ esoph_pie <- function(df){
   ggplot(df, aes(x='',y=total,fill=status,)) +
       geom_bar(width=1,stat="identity") +
       coord_polar(theta="y") +
-      guides(fill = FALSE, color = FALSE, linetype = FALSE, shape = FALSE)
+      guides(fill = FALSE, color = FALSE, linetype = FALSE, shape = FALSE) +
+      ggtitle(df$Group.1[1])
 }
 
 g1 <- esoph_pie(all_39)
@@ -371,4 +372,6 @@ gridExtra::grid.arrange(g1,g2,g3,g4,ncol=4)
 
 ![](hw02_gap_dplyr_files/figure-gfm/esoph_rates-1.png)<!-- -->
 
-Pink represents esophageal cancer, while blue are the controls.
+The esophageal cancer cases are represented by pink, while the controls
+are in blue. Titles indicate the number of grams of alcohol ingested per
+day. As the alcohol intake increases, so do the overall cancer rates.
