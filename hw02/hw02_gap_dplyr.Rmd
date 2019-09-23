@@ -2,9 +2,9 @@
 title: "hw02_gap"
 author: "Avril Metcalfe-Roach"
 date: "18 September 2019"
-output: 
+output:
   html_document:
-    keep_md: true
+    keep_md: yes
 ---
 
 ```{r libraries, warning=FALSE, include=FALSE}
@@ -271,4 +271,5 @@ filter(gapminder, country == "Rwanda" | country == "Afghanistan") %>%
 In this way, all of the data are collected.
 
 # **Tibbles**
-All data tables formatted as requested.
+All small tables as knitr::kable().
+**DT::datatable() only works in html; therefore, the .Rmd and html file on github contains datatable() format for large tables, but knitr:kable(head(10)) is used in the .md file.**
