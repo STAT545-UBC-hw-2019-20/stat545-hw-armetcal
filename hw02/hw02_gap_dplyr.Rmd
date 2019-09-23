@@ -21,7 +21,8 @@ library(datasets) # For Q3
 # **Exercise 1: Dplyr package**
 
 ## 1.1 - Subset gapminder to 3 countries, 1970s.
-### Countries: Canada, India, Italy
+The Gapminder dataset was first sorted to include Canada, India, and Italy using the `filter()` function.
+
 ```{r 1.1}
 filtered <- gapminder %>% 
   filter(country %in% c("Canada","India","Italy"), 
@@ -30,13 +31,20 @@ knitr::kable(filtered, format="markdown")
 ```
 
 ## 1.2 - Select country, gdpPercap using %>%
+The above dataset was further modified to include only the variables *Country* and *GDP per capita*.
+
 ```{r 1.2}
 country_gdp <- filtered %>% 
   select(country,gdpPercap)
 knitr::kable(country_gdp, format="markdown")
 ```
 
-## 1.3 - Entries with a negative change in life expectancy from previous line
+## 1.3 - Entries with a negative change in life expectancy
+
+A new dataset was produced from gapminder that only includes entries where the *Life Expectancy* variable was less than in the previous line. Note that, though the data are arranged by country and then by year, this modification **does not take change of country into account**. Any lines where the year is **1952** (the earliest timepoint) indicates that the apparent decrease in life expectancy is due to the country having a smaller life expectancy than the preceding one.
+
+This was done by creating a vector of delta life expectancies using `diff()`, appending the column to gapminder, and then filtering for negative deltas.
+
 ```{r 1.3}
 exp_list <- gapminder$lifeExp
 change <- diff(exp_list,lag=1,differences=1)
@@ -54,6 +62,11 @@ DT::datatable(gapminder_redExp)
 
 ## 1.4 - Gapminder: max GDP per capita per country
 *Original question (using group_by())*
+
+A new dataset was produced from gapminder that showed only entries with the highest GDP for each country. The command `group_by(country)` was used first, then `mutate(max_gdp = max(gdpPercap))` so that a new column was added that included the higest GDP on a per-country basis. 
+
+This dataset was then filtered to select only lines with GDPs that matched the maximum GDP. The redundant *max_gdp* column was then removed.
+
 ```{r 1.4}
 # Create new column that lists the max GDP per country
 gap_max_gdp <- gapminder %>% 
@@ -68,8 +81,11 @@ max_per_country <- gap_max_gdp %>%
 
 DT::datatable(max_per_country)
 ```
-\newpage
+
 ## 1.5 - Canadian Life Expectancy vs GDP
+
+A plot was produced that investigates the connection between Canadian GDP (x axis) and life expectancy (y axis). When the x axis is transformed to log10, a strong upwards trend is seen between the variables, as shown by the line of best fit (blue).
+
 ```{r 1.5}
 # Select data
 canadians <- gapminder %>% 
@@ -86,20 +102,20 @@ ggplot(canadians, aes(gdpPercap,lifeExp)) +
   ggtitle("Canadian Life Expectancy vs GDP",)
 ```
 
-
-
 # **Exercise 2: Explore individual variables with dplyr**
+Two gapminder variables will be chosen and analyzed for range of values, spread, etc.
 
-## Categorical variable: continent
+## Categorical variable: *continent*
 
 ### Possible range of continent
 - Assuming we're not creating any new continents, this variable is inherently limited to the seven continents.
     - *Note*: North & South America are grouped into 'Americas'
-- Possibilities: c(**Asia, Americas, Europe, Africa, Oceania**, Antarctica)
-    - *Note*: Antarctica has no entries in gapminder, as it is a research base.
+- Possibilities: **Asia, Americas, Europe, Africa, Oceania**, Antarctica
+    - *Note*: Antarctica has no entries in gapminder, as it is primarily a research base.
 
-### Spread of values
-Box and Whisker summary of data:
+### Analysis
+The *continent* variable was first summarized to give a count of how many entries belonged to each continent.
+
 ```{r con_values}
 con_only <- gapminder %>%
   select(continent)
@@ -111,8 +127,9 @@ knitr::kable(summary(con_sum),format="markdown") # Print summary of the data
 The number of datapoints for each populated continent (e.g. Antarctica not included) **ranged from 24 to 624**. 
 The **mean and median were 341 and 360** respectively, with 50% of the data falling between 300 and 396 entries.
 
-Visual representation of distribution:
-```{r con_graphs, message=FALSE}
+In order to visualize the distribution of the datapoints to each continent, a bar plot and pie graph were constructed.
+
+```{r con_graphs, message=FALSE,fig.height=4,fig.width=10}
 bar_plot <- ggplot(con_sum, aes(continent,n)) +
   geom_col(colour="black",fill="blue") +
   geom_text(aes(label=n),hjust=-0.25) +
@@ -140,23 +157,28 @@ Generally, Oceania is very underrepresented, comprising just 24 out of 1704 entr
 ## Quantitative variable: pop (population)
 
 ### Range of pop
-The value of pop must be a Natural (>0) number. No strict upper limit is specified, but should logically be approximately 1.4 billion (the population of China).
+The value of pop must be a Natural (>=0) number. No strict upper limit is specified, but should logically be approximately 1.4 billion (the current population of China).
 
-Visualizing the spread of all population data:
-```{r pop_range, warning=FALSE}
+### Analysis
+The spread of all population data is presented here as a summary.
+
+```{r pop_range}
 pop_only <- gapminder %>%
   select(pop)
 knitr::kable(summary(pop_only),format="markdown")
 ```
 
-```{r}
+**50% of the data decribes a population between 2.8-19.6 million**, with the median population being **7 million**. The average is much higher at **29.6 million** as the high-population outliers are skewing the data. The minimum and maximum populations are **60 000 and 1.32 billion** respectively.
+
+This can be visualized in a boxplot:
+
+```{r,warning=FALSE}
 boxplot(pop_only$pop, 
         ylab="Population",
         xlab = "")
 ```
 
 As demonstrated by the boxplot, the vast majority of the data (all data within the whiskers/confidence interval) comprise a tiny fraction of the possible range of population values. 
-**50% of the data decribes a population between 2.8-19.6 million**, with the median population being **7 million**. The average is much higher at **29.6 million** as the high-population outliers are skewing the data. The minimum and maximum populations are **60 000 and 1.32 billion** respectively.
 
 There are 12 entries for each country, as they were sampled at every time point. We can divide the data by year to see how the **average populations change over time**:
 
@@ -181,22 +203,26 @@ require(gridExtra)
 gridExtra::grid.arrange(pop_time_plot,log_plot,nrow=2)
 ```
  
-The above graph makes it easier to see that there are only a couple of countries that have populations significantly outside of the statistical range. 
-In the linear plot, the significant population size and fast growth of China and India in particular make the population growth of the rest of the world less apparent. 
-By transforming the y axis to a log 10 scale, all of the outliers can be captured and the general trends become apparent: the **IQR (middle 50%) of the data moves up the y axis, showing exponential population growth**.
+The above graphs make it easier to see that there are only a couple of countries that have populations significantly outside of the statistical range. 
 
+In the linear plot, the significant population size and fast growth of China and India in particular make the population growth of the rest of the world less apparent. 
+
+By transforming the y axis to a log 10 scale, all of the outliers can be captured and the general trends become apparent: the **IQR (middle 50%) of the data moves up the y axis, showing exponential population growth**.
 
 # **Exercise 3: Plot Exploration**
 ## Scatterplot of [CO2]ambient vs [CO2]uptake
 
 Dataset: __CO2 - *Carbon Dioxide Uptake in Grass Plants*__
 
-Here are the main parameters of the CO2 dataset:
+This dataset explores the relationship between ambient carbon dioxide levels and subssequent uptake in a variety of conditions. Here are the main parameters:
+
 ```{r CO2_summary}
 knitr::kable(summary(CO2),format="markdown")
 ```
 
-Plant is the type of plant, Type is the location of the plant, conc is the ambient CO2 concentration, and uptake is the CO2 absorbed by the plant.
+Plant is the type of plant, Type is the geographical location of the plant, Treatment is whether the plants were kept in a chilled environment, conc is the ambient CO2 concentration, and uptake is the CO2 absorbed by the plant.
+
+The following scatterplot shows the change in CO2 uptake as a function of CO2 ambient concentration:
 
 ```{r scatterplot}
 CO2 %>% 
@@ -210,14 +236,15 @@ CO2 %>%
     ggtitle("CO2 Plant Uptake vs Ambient CO2 Levels")
 ```
 
-The above graph shows the change in CO2 uptake as a function of CO2 ambient concentration. In the legend, M/Q denote location (Mississippi vs Quebec) and c/nc denote treatment (chilled/not chilled).
+In the legend, M/Q denote location (Mississippi vs Quebec) and c/nc denote treatment (chilled/not chilled).
 
 From the plot, it can be seen that Quebec plants are more efficient at carbon fixation than Mississippi plants, and chilling the plants reduces their efficiency.
 
 ## Graph #2
 Dataset: __esoph - *Smoking, Alcohol and (O)esophageal Cancer*__
 
-Here are the main parameters of the CO2 dataset:
+This dataset explores the relationship between smoking/drinking alcohol and the development of esophageal cancer over several age groups. Here are its main parameters:
+
 ```{r esoph_summary}
 esoph_cancer <- esoph %>% 
   rename("Alcohol Intake"=alcgp) %>% 
@@ -228,8 +255,9 @@ knitr::kable(summary(esoph_cancer),format="markdown")
 
 *Note: Ncases and ncontrols summaries are meaningless, as they supply weightings to the alcohol and tobacco groups.* 
 
-We will be looking at the **rate of esophageal cancer relative to alcohol consumption** and irrespective of age.
-```{r esoph_rates}
+We will be looking at the **rate of esophageal cancer relative to alcohol consumption**, irrespective of age.
+
+```{r esoph_rates, fig.height=3,fig.width=12}
 # Collapse data: sum cases/controls by alcohol group
 p2 <- aggregate(cbind(esoph_cancer$ncases,esoph_cancer$ncontrols), 
                 by=list(esoph_cancer$`Alcohol Intake`), 
@@ -251,6 +279,8 @@ all_120 <- filter(all_data,Group.1=="120+")
 esoph_pie <- function(df){
   ggplot(df, aes(x='',y=total,fill=status,)) +
       geom_bar(width=1,stat="identity") +
+      xlab("") +
+      ylab("") +
       coord_polar(theta="y") +
       guides(fill = FALSE, color = FALSE, linetype = FALSE, shape = FALSE) +
       ggtitle(df$Group.1[1])
@@ -265,10 +295,11 @@ require(gridExtra)
 gridExtra::grid.arrange(g1,g2,g3,g4,ncol=4)
 ```
 
-The esophageal cancer cases are represented by pink, while the controls are in blue. Titles indicate the number of grams of alcohol ingested per day. As the alcohol intake increases, so do the overall cancer rate.
+The esophageal cancer cases are represented by pink, while the controls are in blue. Titles indicate the number of grams of alcohol ingested per day. As the alcohol intake increases, so does the lifetime cancer rate.
 
 # **Recycling**
 Code in question:
+
 ```{r recycling, echo=TRUE}
 filter(gapminder, country == c("Rwanda", "Afghanistan")) %>% 
   DT::datatable()
@@ -277,6 +308,7 @@ filter(gapminder, country == c("Rwanda", "Afghanistan")) %>%
 Though at first glance this code appears to select the data for Afghanistan and Rwanda, but **half of the data is missing**. Every other entry is omitted, in a way where both countries are never represented in the same year. (ex. Rwanda 1952, Afghanistan 1957...)
 
 Because of the inclusion of a list, the function will go along the year-sorted data, taking turns selecting each country for each value of year. The code can be fixed by using an 'or' statement:
+
 ```{r recycling_fix, echo=TRUE}
 filter(gapminder, country == "Rwanda" | country == "Afghanistan") %>% 
   DT::datatable()
