@@ -1,0 +1,25 @@
+---
+title: 'Assignment #3: dplyr, ggplot2'
+author: "Avril Metcalfe-Roach"
+date: "9/26/2019"
+output: 
+  html_document:
+    keep_md: true
+    toc: true
+    toc_float: true
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages, warning=FALSE}
+library(gapminder)
+library(tidyverse)
+library(ggplot2)
+```
+
+# Assignment Overview
+This assignment will use dplyr (via tidyverse) and ggplot2 pacakges to perform three analyses of the gapminder dataset, and the results will be compiled into a published html webpage.
+
