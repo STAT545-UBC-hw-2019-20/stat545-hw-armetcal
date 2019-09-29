@@ -1,0 +1,109 @@
+---
+title: "hw03_3"
+author: "Avril Metcalfe-Roach"
+date: "9/28/2019"
+output: 
+  html_document:
+    keep_md: true
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r packages, include = FALSE, warning=FALSE}
+library(gapminder)
+library(tidyverse)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(formattable)
+library(scales)
+```
+
+# Task Option 6: Find an Interesting Story!
+
+```{r}
+percent <- gapminder %>% 
+  group_by(country) %>% 
+  summarize(`1952` = first(pop),
+            `2007` = last(pop)) %>% 
+  mutate(`Pop Change` = `2007`-`1952`) %>%
+  mutate(`% Growth` = (`Pop Change`/`1952`)*100) %>% 
+  arrange(`% Growth`)
+percent
+```
+```{r}
+is_outlier <- function(x) {
+  return(x < quantile(x, 0.25) - 1.5 * IQR(x) | x > quantile(x, 0.75) + 1.5 * IQR(x))
+}
+percent %>%
+  mutate(outlier = ifelse(is_outlier(`% Growth`), as.character(country), as.numeric(NA))) %>% 
+  ggplot(aes(x='',y=`% Growth`)) +
+  geom_boxplot() +
+  geom_text(aes(label = outlier), na.rm = TRUE, hjust = -0.3) +
+  theme_classic()
+```
+<!--Labelling outliers: https://stackoverflow.com/questions/33524669/labeling-outliers-of-boxplots-in-r-->
+
+Three countries have unusual increases in population: Kuwait, Jordan, and Djibouti. There are also two countries who have experienced less than 5% growth, though these are not statistically significant: Bulgaria, Hungary.
+
+```{r}
+percent %>% 
+  filter(country %in% c("Kuwait","Jordan","Djibouti","Bulgaria","Hungary")) %>% 
+  arrange(`% Growth`)
+```
+
+How has the total GDP changed with these countries?
+
+```{r}
+tot_gdp <- gapminder %>% 
+  mutate(`Total GDP (millions)` = (gdpPercap*pop)/1e6) %>% 
+  filter(country %in% c("Kuwait","Jordan","Djibouti","Bulgaria","Hungary")) %>% 
+  mutate(Growth = ifelse(country %in% c("Bulgaria","Hungary"), 
+                         as.character("Low Pop Growth"), 
+                         as.character("High Pop Growth"))) %>% 
+  rename("Country"= country)
+tot_gdp$Country <- factor(tot_gdp$Country, levels = c("Bulgaria", "Hungary", "Djibouti","Jordan","Kuwait")) 
+g_change <- function(df,x){
+  a <- first(df$gdpPercap)
+  return((gdpPercap/a)*100)
+}
+tot_gdp <- tot_gdp %>% 
+  group_by(Country) %>% 
+  arrange(year) %>%  
+  mutate(gdp_1 = first(`Total GDP (millions)`)) %>% 
+  mutate(`GDP Change` = `Total GDP (millions)`/gdp_1) %>% 
+  select(-gdp_1)
+tot_gdp
+```
+
+```{r}
+tot_gdp %>% 
+  ggplot(aes(year,`Total GDP (millions)`, group=Country,colour=Country)) +
+  geom_point() +
+  geom_line(aes(linetype=Growth),size=1) +
+  theme_classic()
+```
+
+At first glance, Kuwait is very interesting. Despite its remarkably high population growth rate, its total GDP has managed to increase at a rate that matches the countries with the lowest population growth rates. However, this graph is misleading, as countries that start at a higher GDP will appear to have more GDP growth than countries starting at a lower GDP, even if they have the same rate of exponential growth. For this reason, the *Total GDP* for each country was normalized so that the GDP was represented as a fold change to the first (1952) entry:
+
+```{r}
+tot_gdp %>% 
+  ggplot(aes(year,`GDP Change`, group=Country,colour=Country)) +
+  geom_point() +
+  geom_line(aes(linetype=Growth),size=1) +
+  theme_classic()
+```
+
+The graph above shows that the Total GDP rate of change is actually very similar for 4 of the 5 countries, regardless of population growth. Jordan, however, has experienced both an incredible increase in population and total GDP.
+```{r}
+gapminder %>% 
+  filter(country=="Jordan") %>% 
+  ggplot(aes(year, gdpPercap)) +
+  geom_line()
+
+```
+
