@@ -57,25 +57,24 @@ knitr::kable(o2,format="html") %>%
  
 ```{r o2_slope}
 # Make plot:
-p <- ggplot(o2) +
+ggplot(o2) +
   geom_segment(aes(x=1,xend=2,y=`Max GDP`, yend=`Min GDP`, col=continent),
                size=1, show.legend=TRUE) +
   geom_vline(xintercept = 1, size = 0.5) +
   geom_vline(xintercept = 2, size=0.5) +
   labs(x='',y="GDP per Capita") +
   xlim(1,2) +
-  ylim(0,(1.15*(max(o2$`Max GDP`))))
+  ylim(0,(1.15*(max(o2$`Max GDP`)))) +
 
-# Add labels:
-p <- p +
+  # Add labels:
   geom_text(label = "Max GDP", x=1.16, y=1.1*max(o2$`Max GDP`), 
             hjust=1.2, size = 4) +
   geom_text(label = "Min GDP", x=1.87, y=1.1*max(o2$`Max GDP`), 
             hjust=-0.1, size = 4) +
-  ggtitle("Highest and Lowest GDPs per Capita on Record (Per Continent)")
+  ggtitle("Highest and Lowest GDPs per Capita on Record (Per Continent)") +
 
 # Format nicely!
-p + theme(panel.background = element_blank(),
+  theme(panel.background = element_blank(),
           panel.grid=element_blank(),
           axis.ticks=element_blank(),
           axis.text.x=element_blank(),
