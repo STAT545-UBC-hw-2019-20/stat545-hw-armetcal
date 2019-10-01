@@ -1,0 +1,144 @@
+---
+title: "Analysis 3: Task Option 6"
+output: 
+  html_document:
+    keep_md: true
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r packages, include = FALSE, warning=FALSE}
+library(gapminder)
+library(tidyverse)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(formattable)
+library(scales)
+```
+
+### Task Option 6: Find an Interesting Story!
+
+For this question, I was interested in determining which countries experienced a significantly different rate of population growth over the course of the study, and the subsequent effects on the country's GDP.
+
+First, the gapminder dataset was summarized by country to include the populations at the beginning (1952) and end (2007) of the study, and the subsequent change in population (`Pop Change = 2007-1957`). The latter was normalized to represent a % increase from 1957 (`% Growth = (Pop Change/1952)*100`).
+
+```{r}
+percent <- gapminder %>% 
+  group_by(country) %>% 
+  summarize(`1952` = first(pop),
+            `2007` = last(pop)) %>% 
+  mutate(`Pop Change` = `2007`-`1952`) %>%
+  mutate(`% Growth` = (`Pop Change`/`1952`)*100) %>% 
+  arrange(`% Growth`)
+percent
+```
+
+These data were then represented in a histogram. Any countries that had statistically different population growths were identified (see References) and their names were labelled on the plot.
+
+```{r}
+is_outlier <- function(x) {
+  return(x < quantile(x, 0.25) - 1.5 * IQR(x) | x > quantile(x, 0.75) + 1.5 * IQR(x))
+}
+percent %>%
+  mutate(outlier = ifelse(is_outlier(`% Growth`), as.character(country), as.numeric(NA))) %>% 
+  ggplot(aes(x='',y=`% Growth`)) +
+  geom_boxplot() +
+  geom_text(aes(label = outlier), na.rm = TRUE, hjust = -0.3) +
+  theme_classic() +
+  ggtitle("Spread of Population Growth")
+```
+
+The median population growth was 245%. Three countries have unusual increases in population: Kuwait, Jordan, and Djibouti. Conversely, two countries who have experienced less than 5% growth were identified from the initial table, though these are not statistically significant: Bulgaria, Hungary. These countries are summarized in the table below:
+
+```{r}
+percent %>% 
+  filter(country %in% c("Kuwait","Jordan","Djibouti","Bulgaria","Hungary")) %>% 
+  arrange(`% Growth`)
+```
+
+Objective 2 was to determine how the total GDP changed in these countries over time, to serve as a reflection of how the overall wealth of the country changes relative to the number of citizens. Total GDP is defined here as `GDP per capita * population`.
+
+A new variable, `Total GDP (billions)`, was added to the gapminder dataset as described above. The data were normalized by adding another variable, `GDP Change`, that expresses the Total GDP as a fold change from the first recorded Total GDP in 1952.
+
+```{r}
+tot_gdp <- gapminder %>% 
+  mutate(`Total GDP (billions)` = (gdpPercap*pop)/1e9) %>% 
+  filter(country %in% c("Kuwait","Jordan","Djibouti","Bulgaria","Hungary")) %>% 
+  mutate(Growth = ifelse(country %in% c("Bulgaria","Hungary"), 
+                         as.character("Low Pop Growth"), 
+                         as.character("High Pop Growth"))) %>% 
+  rename("Country"= country)
+tot_gdp$Country <- factor(tot_gdp$Country, levels = c("Bulgaria", "Hungary", "Djibouti","Jordan","Kuwait")) 
+g_change <- function(df,x){
+  a <- first(df$gdpPercap)
+  return((gdpPercap/a)*100)
+}
+tot_gdp <- tot_gdp %>% 
+  group_by(Country) %>% 
+  arrange(year) %>%  
+  mutate(gdp_1 = first(`Total GDP (billions)`)) %>% 
+  mutate(`GDP Change` = `Total GDP (billions)`/gdp_1) %>% 
+  select(-gdp_1)
+```
+
+```{r}
+p1 <- tot_gdp %>% 
+  ggplot(aes(year,`Total GDP (billions)`, group=Country,colour=Country)) +
+  geom_point() +
+  geom_line(aes(linetype=Growth),size=1) +
+  theme_classic() +
+  theme(legend.position = "none") +
+  ggtitle("a) Raw")
+  
+
+p2 <- tot_gdp %>% 
+  ggplot(aes(year,`GDP Change`, group=Country,colour=Country)) +
+  geom_point() +
+  geom_line(aes(linetype=Growth),size=1) +
+  theme_classic() +
+  theme(legend.position="right") +
+  ggtitle("b) Normalized")
+
+# Creating one common legend (see References):
+
+shared_legend<-function(p){
+  temp <- ggplot_gtable(ggplot_build(p))
+  L <- which(sapply(temp$grobs, function(x) x$name) == "guide-box")
+  f_leg <- temp$grobs[[L]]
+  return(f_leg)}
+
+leg<-shared_legend(p2)
+
+# Create plot:
+p3<-gridExtra::grid.arrange(p1,
+                 p2 + theme(legend.position = "none"),
+                 leg,ncol=3)
+```
+
+In the Raw Total GDP plot, Kuwait is interesting. Despite its remarkably high population growth rate, its total GDP mirrors the countries with the lowest population growth rates.
+
+However, the raw data graph is misleading, as countries such as Kuwait that start at a higher GDP will appear to have more GDP growth than countries starting at a lower GDP, even if they have the same **rate** of exponential growth. When the data are normalized, it can be seen that 4/5 countries - including Kuwait - experience similar rates of GDP growth. Jordan, however, has experienced both an incredible increase in population and total GDP. Their Total GDP increases by a factor of 30 over the course of the study, far exceeding their 9-fold increase in population; in other words, Jordan experienced unusually high increases in both population and prosperity over the course of the study. 
+
+
+### Site Map
+
+*[Assignment Repository](https://armetcal.github.io/html_hw)*
+
+[Assignment 3 Home Page](https://armetcal.github.io/html_hw/hw03)
+
+[Analysis 1](https://armetcal.github.io/html_hw/hw03/hw03.html)
+
+[Analysis 2](https://armetcal.github.io/html_hw/hw03/hw03_2.html)
+
+**[Analysis 3 (Current Page)](https://armetcal.github.io/html_hw/hw03/hw03_3.html)**
+
+
+### References
+
+Outliers were labelled on the histogram by following the directions outlined by **[JasonAizkalns](https://stackoverflow.com/users/2572423/jasonaizkalns)** on [StackOverflow](https://stackoverflow.com/questions/33524669/labeling-outliers-of-boxplots-in-r).
+
+A common legend was created for the Total GDP graphs by using the code provided by **[Roland](https://stackoverflow.com/users/1412059/roland)** on [StackOverflow](https://stackoverflow.com/questions/13649473/add-a-common-legend-for-combined-ggplots).

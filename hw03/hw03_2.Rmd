@@ -1,0 +1,75 @@
+---
+title: "Analysis 2: Task Option 5"
+output: 
+  html_document:
+    keep_md: true
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r packages, include = FALSE, warning=FALSE}
+library(gapminder)
+library(tidyverse)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(formattable)
+library(scales)
+```
+
+### Task Option 5: Life Expectancy over Time, Per Continent
+
+The gapminder dataset was used to identify how life expectancy has changed over time, on a per-continent basis.
+
+```{r o5}
+o5 <- gapminder %>% 
+  group_by(continent,year) %>% 
+  summarize(`Avg Life Exp` = mean(lifeExp),
+            `Std Dev Life Exp` = sd(lifeExp)) %>% 
+  rename("Continent"=continent, "Year" = year)
+o5$`Avg Life Exp` <- round(o5$`Avg Life Exp`,1)
+o5$`Std Dev Life Exp` <- round(o5$`Std Dev Life Exp`,1)
+o5
+```
+
+This ugly table summarizes the life expectancy per continent, per year by including the Avg Life Expectancy (`mean(lifeExp)`) and the Std Deviation of the Life Expectancy (`sd(lifeExp)`). Values were rounded to the nearest 0.1 year.
+
+The change in life expectancy per continent was then graphed in a line chart:
+
+```{r o5_plot}
+o5 %>% 
+  ggplot(aes(Year, `Avg Life Exp`, 
+             group = Continent, 
+             colour = Continent)) +
+  geom_line(size = 1) +
+  geom_point() +
+  geom_errorbar(aes(ymin = `Avg Life Exp` - `Std Dev Life Exp`,
+                    ymax = `Avg Life Exp` + `Std Dev Life Exp`), 
+                size = 0.75, position=position_dodge(0.05)) +
+  ggtitle("Change in Life Expectancy Per Continent") +
+  theme_classic()
+```
+
+Error bars were included to indicate the spread of the data. The life expectancy of all continents increases over time, and most continents experience a reduction in the spread of life expectancies, indicating less disparity between different countries. African life expectancies, however, become more variable over time.
+
+It is also interesting to note that all continents except for Africa seem to have converging life expectancies.
+
+### Site Map
+
+*[Assignment Repository](https://armetcal.github.io/html_hw)*
+
+[Assignment 3 Home Page](https://armetcal.github.io/html_hw/hw03)
+
+[Analysis 1](https://armetcal.github.io/html_hw/hw03/hw03.html)
+
+**[Analysis 2 (Current Page)](https://armetcal.github.io/html_hw/hw03/hw03_2.html)**
+
+[Analysis 3](https://armetcal.github.io/html_hw/hw03/hw03_3.html)
+
+
+### References
+
+Error bars added to plot based on guide posted by [sthda.com](http://www.sthda.com/english/wiki/ggplot2-error-bars-quick-start-guide-r-software-and-data-visualization).
