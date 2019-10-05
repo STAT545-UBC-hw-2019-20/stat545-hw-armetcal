@@ -96,7 +96,7 @@ This exercise used two datasets: `guest` and `email`. `guest` contains a variety
 
 `left_join()` was used to add the email associated with each name to the `guest` dataset. Before this was performed, an alternate form of `email` had to be generated, called `sep_email`, as the original dataset contained all members of each wedding party in the same cell. `separate_rows()` was thus used to give each person their own row in the alternate table.
 
-```{r}
+```{r, message=FALSE}
 sep_email <- email %>% 
     separate_rows(guest, sep=', ') %>% 
     rename("name" = guest)
@@ -108,7 +108,7 @@ guest %>%
 
 `anti_join()` was used on the `sep_email` dataset in order to determine which people have an associated email but are not on the guestlist. Emails were kept in the output because hey, it's not too late to invite them!
 
-```{r}
+```{r, message=FALSE}
 sep_email %>% 
   anti_join(guest)
 ```
@@ -117,7 +117,7 @@ sep_email %>%
 
 Good news - all three of the remaining people from the previous question can come to the wedding! They were added to the `guest` dataset using `full_join(sep_email)`, which also added each person's contact email to the table.
 
-```{r}
+```{r, message=FALSE}
 guest %>% 
   full_join(sep_email)
 ```
