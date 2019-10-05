@@ -1,0 +1,86 @@
+---
+title: 'HW04: Tidy Data And Joins'
+author: "Avril Metcalfe-Roach"
+date: "2019-10-04"
+output: 
+  html_document:
+    keep_md: true
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r packages, include = FALSE, warning=FALSE}
+library(gapminder)
+library(tidyverse)
+library(ggplot2)
+```
+
+# Univariate Exercise: Option 1
+
+```{r part_1}
+part_1 <- gapminder %>% 
+            filter(country %in% c("Rwanda","China","Mexico")) %>% 
+            select(year,country,lifeExp) %>% 
+            pivot_wider(id_cols = year,
+                        names_from = country,
+                        values_from = lifeExp) %>% 
+            print()
+```
+
+```{r part_2}
+part_1 %>% 
+  ggplot(aes(China,Mexico, colour=year)) +
+  geom_point() +
+  geom_smooth(method=lm) +
+  xlab("China (Years)") +
+  ylab("Mexico (Years)") +
+  ggtitle("Life Expectancy of China vs Mexico from 1952 to 2007")
+```
+
+```{r part_3}
+part_1 %>% 
+  pivot_longer(cols = c(China,Mexico,Rwanda),
+               names_to = "country",
+               values_to = "lifeExp")
+```
+
+# Multivariate Data Reshaping: Option 1
+
+```{r}
+multi_1 <- gapminder %>% 
+              filter(country %in% c("Canada","United States","Mexico")) %>% 
+              select(year,country,lifeExp,gdpPercap) %>% 
+              pivot_wider(id_cols = year,
+                          names_from = country,
+                          names_sep = "_",
+                          values_from = c(lifeExp,gdpPercap)) %>% 
+  print()
+```
+
+```{r}
+multi_1 %>% 
+  pivot_longer(cols = -year,
+               names_to = c(".value","country"),
+               names_sep = "_")
+```
+
+# Exercise 3: Table Joins
+
+```{r include = FALSE}
+guest <- read_csv("https://raw.githubusercontent.com/STAT545-UBC/Classroom/master/data/wedding/attend.csv")
+email <- read_csv("https://raw.githubusercontent.com/STAT545-UBC/Classroom/master/data/wedding/emails.csv")
+```
+
+### 3.1
+
+```{r}
+sep_email <- email %>% 
+    separate_rows(guest, sep=', ') %>% 
+    rename("name" = guest)
+guest %>% 
+  left_join(sep_email, by = "name")
+```
+
