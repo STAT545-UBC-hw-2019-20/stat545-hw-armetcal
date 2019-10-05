@@ -84,3 +84,15 @@ guest %>%
   left_join(sep_email, by = "name")
 ```
 
+### 3.2
+
+```{r}
+sep_email %>% 
+  anti_join(guest)
+```
+
+```{r}
+guest %>% 
+  full_join(sep_email)
+```
+
