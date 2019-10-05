@@ -18,7 +18,9 @@ library(tidyverse)
 library(ggplot2)
 ```
 
-# Univariate Exercise: Option 1
+# PART 1: Univariate Exercise: Option 1
+
+Gapminder was modified to include only the countries **Rwanda, China, and Mexico**, and only the variables **year, country, and life expectancy**. The data were then rearranged using `pivot_wider()` so that each row represented one year, and each country was assigned an additional column under which the life expectancy for that year was recorded.
 
 ```{r part_1}
 part_1 <- gapminder %>% 
@@ -30,6 +32,8 @@ part_1 <- gapminder %>%
             print()
 ```
 
+The above dataset was then used to plot the life expectancies of China vs. Mexico.
+
 ```{r part_2}
 part_1 %>% 
   ggplot(aes(China,Mexico, colour=year)) +
@@ -40,6 +44,10 @@ part_1 %>%
   ggtitle("Life Expectancy of China vs Mexico from 1952 to 2007")
 ```
 
+In this scatterplot, a relatively linear trend is observed between the life expectancies of the two countries, as shown by the line of best fit. The years of measurement range from dark blue (1952) to light blue (2007). Overall, both countries experienced similar increases in life expectancy.
+
+The data were then pivoted back to the original gapminder layout using `pivot_longer()` (though the filtering and selection of countries/variables was not reversed).
+
 ```{r part_3}
 part_1 %>% 
   pivot_longer(cols = c(China,Mexico,Rwanda),
@@ -47,7 +55,12 @@ part_1 %>%
                values_to = "lifeExp")
 ```
 
-# Multivariate Data Reshaping: Option 1
+
+# PART 2: Multivariate Data Reshaping: Option 1
+
+Gapminder was filtered to include only **Canada, United States, and Mexico**, and all variables other than **year, country, life expectancy, and gdp per capita** were discarded.
+
+`pivot_wider()` was then used to modify the dataset so that there were separate columns for each country's life expectancy and gdp per capita per year of measurement.
 
 ```{r}
 multi_1 <- gapminder %>% 
@@ -60,6 +73,8 @@ multi_1 <- gapminder %>%
   print()
 ```
 
+The above dataset was then reversed to its original (truncated) form using `pivot_longer()`.
+
 ```{r}
 multi_1 %>% 
   pivot_longer(cols = -year,
@@ -67,14 +82,19 @@ multi_1 %>%
                names_sep = "_")
 ```
 
-# Exercise 3: Table Joins
+
+# PART 3: Table Joins
 
 ```{r include = FALSE}
 guest <- read_csv("https://raw.githubusercontent.com/STAT545-UBC/Classroom/master/data/wedding/attend.csv")
 email <- read_csv("https://raw.githubusercontent.com/STAT545-UBC/Classroom/master/data/wedding/emails.csv")
 ```
 
+This exercise used two datasets: `guest` and `email`. `guest` contains a variety of guest-specific accommodations for an upcoming wedding, whereas `email` contains guest names and an associated contact email.
+
 ### 3.1
+
+`left_join()` was used to add the email associated with each name to the `guest` dataset. Before this was performed, an alternate form of `email` had to be generated, called `sep_email`, as the original dataset contained all members of each wedding party in the same cell. `separate_rows()` was thus used to give each person their own row in the alternate table.
 
 ```{r}
 sep_email <- email %>% 
@@ -86,10 +106,16 @@ guest %>%
 
 ### 3.2
 
+`anti_join()` was used on the `sep_email` dataset in order to determine which people have an associated email but are not on the guestlist. Emails were kept in the output because hey, it's not too late to invite them!
+
 ```{r}
 sep_email %>% 
   anti_join(guest)
 ```
+
+### 3.3
+
+Good news - all three of the remaining people from the previous question can come to the wedding! They were added to the `guest` dataset using `full_join(sep_email)`, which also added each person's contact email to the table.
 
 ```{r}
 guest %>% 
