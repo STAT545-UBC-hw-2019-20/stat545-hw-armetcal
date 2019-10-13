@@ -1,0 +1,81 @@
+---
+title: 'HW05: Factors & Figures'
+author: "Avril Metcalfe-Roach"
+date: "10/13/2019"
+output: 
+  html_document:
+    keep_md: true
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libraries, warning=FALSE}
+library(gapminder)
+library(tidyverse)
+library(dplyr)
+library(here)
+library(forcats)
+```
+
+
+## Exercise 1: `here` Package Value
+
+The `here` package (documented [here](https://www.rdocumentation.org/packages/here/versions/0.1)) is an innovative solution to sharing project files across different file locations and operating systems. 
+
+By automatically determining the 'root' directory of a project, it bypasses the need to specify the exact file path for each element included in the code. This allows the project files to be easily moved to different locations around the computer or shared between users, and makes the code more legible by inlcuding only the file name in the written code. It also bridges the gap between different operating systems; instead of changing between forward and back slashes to convert file paths between Windows and Mac, one simply inputs the file name in quotations, leaving the parsing to the R package.
+
+The `here` package is also easy to use. Once the package is loaded, any subfolders beyond the root directory (as defined by `here()`) are called by simply putting the name in quotations. The desired file is then called at the end in quotations. For example, if the project file is stored in the `here()` root directory, then a *file.jpeg* stored in *subfolder* can be accessed like so:
+
+`here('subfolder','file.jpeg')`
+
+This format can also be used to save new files.
+
+Other perks of the `here` package are that it initializes a dedicated, local working directory for the code at hand, so that all items are cleared from the workspace. It also overrides the local working directory that is created by Rmd, which would otherwise cause relative path commands to fail.
+
+## Exercise 2: Factor Management
+
+#### Dataset: `gapminder`
+#### Variable: `country`
+
+In this exercise, the above variable will be identified as a factor
+
+```{r ex2}
+# Load dataset:
+gapminder %>%
+  as_tibble()
+
+# Variable:
+gap_coun <- gapminder$country
+
+# Data information before dropping levels:
+class(gap_coun) # Class of country column
+nlevels(gap_coun) # The number of different values of country
+str(gap_coun) # Overall structure of country
+nrow(gapminder) # Number of gapminder rows before factor mods
+
+# Drop all countries that start with A:
+no_a <- filter(gapminder, substr(country,1,1) != 'A') %>% 
+  droplevels()
+
+noa_coun <- no_a$country
+
+# Data information after dropping levels:
+class(noa_coun)
+nlevels(noa_coun)
+str(noa_coun)
+nrow(no_a)
+
+# Add summary statistic: std dev of GDP over time
+noa_sd <- no_a %>% 
+  group_by(country) %>% 
+  mutate('Std Dev' = sd(gdpPercap)) %>% 
+  ungroup()
+
+# Reorder countries based on 2007 population, low to high:
+reordered <- forcats::fct_reorder(noa_sd$country, noa_sd$`Std Dev`)
+dt <- 
+```
+
