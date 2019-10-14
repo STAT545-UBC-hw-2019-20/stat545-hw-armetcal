@@ -12,7 +12,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r libraries, warning=FALSE}
+```{r libraries, message=FALSE, warning=FALSE, include = FALSE}
 library(gapminder)
 library(tidyverse)
 library(dplyr)
@@ -38,44 +38,107 @@ Other perks of the `here` package are that it initializes a dedicated, local wor
 ## Exercise 2: Factor Management
 
 #### Dataset: `gapminder`
-#### Variable: `country`
+#### Variable: `continent`
 
 In this exercise, the above variable will be identified as a factor
 
 ```{r ex2}
-# Load dataset:
-gapminder %>%
-  as_tibble()
-
-# Variable:
-gap_coun <- gapminder$country
-
-# Data information before dropping levels:
-class(gap_coun) # Class of country column
-nlevels(gap_coun) # The number of different values of country
-str(gap_coun) # Overall structure of country
-nrow(gapminder) # Number of gapminder rows before factor mods
-
-# Drop all countries that start with A:
-no_a <- filter(gapminder, substr(country,1,1) != 'A') %>% 
+# Drop all entries in Africa:
+no_a <- filter(gapminder, continent != 'Africa') %>% 
   droplevels()
 
+gap_coun <- gapminder$country
 noa_coun <- no_a$country
 
+# Data information before dropping levels:
+Class <- class(gap_coun) # Class of country column
+Levels <- nlevels(gap_coun) # The number of different values of country
+Rows <- nrow(gapminder) # Number of gapminder rows before factor mods
+gap_info <- c(Class, Levels, Rows)
+
 # Data information after dropping levels:
-class(noa_coun)
-nlevels(noa_coun)
-str(noa_coun)
-nrow(no_a)
+Class <- class(noa_coun) # Class of country column
+Levels <- nlevels(noa_coun) # The number of different values of country
+Rows <- nrow(no_a) # Number of gapminder rows after factor mods
+noa_info <- c(Class, Levels, Rows)
 
-# Add summary statistic: std dev of GDP over time
-noa_sd <- no_a %>% 
-  group_by(country) %>% 
-  mutate('Std Dev' = sd(gdpPercap)) %>% 
-  ungroup()
+# Comparison table:
+Values <- c('Class', 'Levels', 'Rows')
+tibble::tibble(Variable = Values,
+               Pre = gap_info,
+               Post = noa_info) %>% 
+  knitr::kable()
 
-# Reorder countries based on 2007 population, low to high:
-reordered <- forcats::fct_reorder(noa_sd$country, noa_sd$`Std Dev`)
-dt <- 
+str(gap_coun) 
+str(noa_coun) 
 ```
+
+```{r Figures, warning=FALSE}
+# Pre-reordering:
+
+# 1. Arrange based on gdpPercap, year:
+pre <- gapminder %>% 
+  filter(year == 2007) %>% 
+  group_by(continent) %>% 
+  mutate('% SD 2007' = sd(gdpPercap)/mean(gdpPercap)) %>%
+  mutate_at(vars(`% SD 2007`),funs(round(.,3))) %>% 
+  ungroup() %>% 
+  arrange(-`% SD 2007`,-gdpPercap)
+
+post <- no_a %>% 
+  filter(year == 2007) %>% 
+  group_by(continent) %>% 
+  mutate('% SD 2007' = sd(gdpPercap)/mean(gdpPercap)) %>%
+  mutate_at(vars(`% SD 2007`),funs(round(.,3))) %>% 
+  ungroup() %>% 
+  arrange(-`% SD 2007`,-gdpPercap)
+
+DT::datatable(pre)
+DT::datatable(post)
+```
+
+```{r reordering}
+# Pre-reordering:
+no_reorder <- post %>% 
+  ggplot(aes(x=continent, 
+             y=`% SD 2007`, 
+             fill = continent)) +
+  geom_col() +
+  xlab('Continent') +
+  ylab('% Std Dev of GDP per Capita in 2007') +
+  ggtitle('Not Reordered') +
+  scale_fill_discrete(name = "Continent") +
+  ggthemes::theme_tufte() +
+  theme(legend.position='none')
+  
+
+# Continents ordered from min to max % SD:
+reorder <- post %>% 
+  ggplot(aes(x=fct_reorder(continent,`% SD 2007`,min), 
+             y=`% SD 2007`, 
+             fill = continent)) +
+  geom_col() +
+  xlab('Continent') +
+  ylab('% Std Dev of GDP per Capita in 2007') +
+  ggtitle('Reordered (Min to Max)') +
+  scale_fill_discrete(name = "Continent") +
+  ggthemes::theme_tufte()
+
+# Creating one common legend (see References):
+shared_legend<-function(p){
+  temp <- ggplot_gtable(ggplot_build(p))
+  L <- which(sapply(temp$grobs, function(x) x$name) == "guide-box")
+  f_leg <- temp$grobs[[L]]
+  return(f_leg)}
+
+leg<-shared_legend(reorder)
+
+# Arrange into side by side plots:
+require(gridExtra) # Arrange them side by side
+gridExtra::grid.arrange(no_reorder,reorder + theme(legend.position='none'), leg, ncol=3)
+```
+
+### References
+
+A common legend was created for the Total GDP graphs by using the code provided by **[Roland](https://stackoverflow.com/users/1412059/roland)** on [StackOverflow](https://stackoverflow.com/questions/13649473/add-a-common-legend-for-combined-ggplots
 
