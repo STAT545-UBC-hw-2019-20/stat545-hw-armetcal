@@ -144,6 +144,52 @@ A common legend was created for the Total GDP graphs by using the code provided 
 
 ## Exercise 3: File input/output (I/O)
 
+```{r .csv}
+# Modify gapminder data to include only entries that represent the lowest life expectancy for each country:
+modified <- gapminder %>% 
+  group_by(country) %>% 
+  mutate('min_life' = min(lifeExp)) %>% 
+  filter(lifeExp == min_life) %>% 
+  ungroup() %>% 
+  select(-min_life) %>% 
+  as_tibble()
+
+# Export to hw05 file:
+write_csv(modified, here::here('hw05','min_life.csv'))
+# Import again:
+imported <- read_csv(here::here('hw05','min_life.csv'))
+# Check for equality:
+all.equal(modified, imported)
+
+# Change classes to factors:
+imported$country = as.factor(imported$country)
+imported$continent = as.factor(imported$continent)
+# Sort by most to least recent, then by lifeExp:
+imported %>% 
+  arrange(-year,lifeExp) %>% 
+  DT::datatable()
+```
+
+```{r .RDS}
+# Export to hw05 file:
+saveRDS(modified, here::here('hw05','min_life.rds'))
+# Import again:
+imported <- readRDS(here::here('hw05','min_life.rds'))
+
+# Check for equality:
+all.equal(modified, imported)
+
+# Sort by most to least recent, then by lifeExp:
+imported %>% 
+  arrange(-year,lifeExp) %>% 
+  DT::datatable()
+```
+
+
+
+
+## Exercise 4: Visualization design
+
 #### Assignment: #2
 
 ```{r Old Plot,out.width="49%",out.height="20%",fig.cap="",fig.show='hold',fig.align='center'}
@@ -174,3 +220,10 @@ dev.off()
 # Converted to .jpeg because grid.arrange won't accept non-ggplot2 plots
 knitr::include_graphics(c("old.jpeg","new.jpeg"))
 ```
+
+## Exercise 5: Writing figures to file
+
+```{r Save}
+
+```
+
