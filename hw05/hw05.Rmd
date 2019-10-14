@@ -73,7 +73,7 @@ str(gap_coun)
 str(noa_coun) 
 ```
 
-```{r Figures, warning=FALSE}
+```{r Figures, warning=FALSE, message=FALSE}
 # Pre-reordering:
 
 # 1. Arrange based on gdpPercap, year:
@@ -97,7 +97,7 @@ DT::datatable(pre)
 DT::datatable(post)
 ```
 
-```{r reordering}
+```{r reordering, message=FALSE}
 # Pre-reordering:
 no_reorder <- post %>% 
   ggplot(aes(x=continent, 
@@ -140,5 +140,36 @@ gridExtra::grid.arrange(no_reorder,reorder + theme(legend.position='none'), leg,
 
 ### References
 
-A common legend was created for the Total GDP graphs by using the code provided by **[Roland](https://stackoverflow.com/users/1412059/roland)** on [StackOverflow](https://stackoverflow.com/questions/13649473/add-a-common-legend-for-combined-ggplots
+A common legend was created for the Total GDP graphs by using the code provided by **[Roland](https://stackoverflow.com/users/1412059/roland)** on [StackOverflow](https://stackoverflow.com/questions/13649473/add-a-common-legend-for-combined-ggplots).
+
+## Exercise 3: File input/output (I/O)
+
+#### Assignment: #2
+
+```{r Old Plot}
+pop_only <- gapminder %>%
+  select(pop)
+  
+Old <- boxplot(pop_only$pop, 
+        ylab="Population",
+        xlab = "")
+
+New <- pop_only %>% 
+  ggplot(aes(y=pop)) +
+  geom_boxplot(fill = "blue") +
+  ylab("Population") +
+  ggtitle("Spread of Country Population Values from 1952-2007") +
+  ggthemes::theme_tufte() +
+  scale_y_continuous(trans = 'log10',
+                    breaks = trans_breaks("log10", function(x) 10^x),
+                    labels = trans_format("log10", math_format(10^.x))) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  theme(plot.title = element_text(hjust = 0.5))
+New
+  
+require(gridExtra) # Arrange them side by side
+gridExtra::grid.arrange(Old,New,ncol=2)
+```
 
