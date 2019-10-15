@@ -230,43 +230,67 @@ p <- here::here('hw05')
 
 # Explicitly call 'no_reorder' plot as tiny phot:
 ggsave('no_reorder.jpeg', no_reorder, width = 3.5, height = 3.5, dpi = 300)
-# Implicitly call last plot ('reorder')
-ggsave('reorder.jpeg', width = 3.5, height = 3.5, dpi = 300)
-
-# Play with arguments:
-ggsave("small_dim.jpeg", path = p, width = 1.75, height = 1.75, dpi = 300)
-ggsave("low_dpi.jpeg", path = p, width = 3.5, height = 3.5, dpi = 150)
-ggsave("high_dpi.jpeg", path = p, width = 3.5, height = 3.5, dpi = 600)
-ggsave("low_scale.jpeg", path = p, width = 3.5, height = 3.5, dpi = 300, scale = 0.5)
-ggsave("high_scale.jpeg", path = p, width = 3.5, height = 3.5, dpi = 300, scale = 2)
-
-# Try saving in .tiff
-ggsave('tiff.tiff', width = 3.5, height = 3.5, dpi = 300)
 ```
 
 ### Explicit:
 ![](no_reorder.jpeg)
 
+```{r Save2}
+# Implicitly call last plot ('reorder')
+ggsave('reorder.jpeg', width = 3.5, height = 3.5, dpi = 300)
+```
+
 ### Implicit:
 ![](reorder.jpeg)
+
+```{r Save3}
+# Play with arguments:
+ggsave("small_dim.jpeg", path = p, width = 1.75, height = 1.75, dpi = 300)
+```
+
 
 ### Reduce Height/Width:
 ![](small_dim.jpeg)
 
+```{r Save4}
+# Play with arguments:
+ggsave("low_dpi.jpeg", path = p, width = 3.5, height = 3.5, dpi = 150)
+```
+
 ### Reduce DPI:
 ![](low_dpi.jpeg)
+
+```{r Save5}
+# Play with arguments:
+ggsave("high_dpi.jpeg", path = p, width = 3.5, height = 3.5, dpi = 600)
+```
 
 ### Increase DPI:
 ![](high_dpi.jpeg)
 
+```{r Save6}
+# Play with arguments:
+ggsave("low_scale.jpeg", path = p, width = 3.5, height = 3.5, dpi = 300, scale = 0.5)
+```
+
 # Reduce scale:
 ![](low_scale.jpeg)
+
+```{r Save7}
+# Play with arguments:
+ggsave("high_scale.jpeg", path = p, width = 3.5, height = 3.5, dpi = 300, scale = 2)
+```
 
 # Increase scale:
 ![](high_scale.jpeg)
 
-### Save in .tiff format:
-![](tiff.tiff)
+```{r Save8}
+# Try saving in .png
+ggsave('png.png', width = 3.5, height = 3.5, dpi = 300)
+```
+
+### Save in .png format:
+![](png.png)
 
 
 
