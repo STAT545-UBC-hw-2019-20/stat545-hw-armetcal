@@ -1,7 +1,7 @@
 ---
 title: 'HW05: Factors & Figures'
 author: "Avril Metcalfe-Roach"
-date: "10/13/2019"
+date: "2019/10/16"
 output: 
   html_document:
     keep_md: true
@@ -21,7 +21,11 @@ library(here)
 library(forcats)
 ```
 
+# Overview
+
 This assignment will explore the incredible virtues of using the `here` package, and demonstrate the subtle complexities of plot specifications.
+
+Please click on **Overview** in the table of contents to view the assignment subsections.
 
 ## Exercise 1: `here` Package Value
 
@@ -334,7 +338,7 @@ ggsave("high_dpi.jpeg", path = p, width = 3.5, height = 3.5, dpi = 600)
 
 This results in a plot that looks identical to the 'default' plot, which is likely due to the size limitations of the HTML file. The real jpeg is expected to be twice as large.
 
-# Reduce scale
+### Reduce scale
 The scale was reduced by 50%:
 
 ```{r Save6}
@@ -346,7 +350,7 @@ ggsave("low_scale.jpeg", path = p, width = 3.5, height = 3.5, dpi = 300, scale =
 
 Identically to reducing the dimensions, only the plot area is reduced.
 
-# Increase scale
+### Increase scale
 The scale was then doubled:
 
 ```{r Save7}
