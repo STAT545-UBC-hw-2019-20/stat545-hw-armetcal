@@ -6,6 +6,7 @@ output:
   html_document:
     keep_md: true
     toc: true
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
@@ -66,7 +67,7 @@ Rows <- nrow(no_a) # Number of gapminder rows after factor mods
 noa_info <- c(Class, Levels, Rows)
 ```
 
-THe factor information was summarized in a table, and the structure (`str()`) was printed below for good measure.
+The factor information was summarized in a table, and the structure (`str()`) was printed below for good measure.
 
 ```{r ex2 table}
 # Comparison table:
@@ -130,7 +131,8 @@ no_reorder <- post %>%
 
 # Continents ordered from min to max % SD:
 reorder <- post %>% 
-  ggplot(aes(x=fct_reorder(continent,`% SD 2007`,min), 
+  ggplot(aes(x=forcats::fct_reorder
+                (continent,`% SD 2007`,min), 
              y=`% SD 2007`, 
              fill = continent)) +
   geom_col() +
@@ -160,7 +162,7 @@ A common legend was created for the Total GDP graphs by using the code provided 
 
 ## Exercise 3: File input/output (I/O)
 
-
+Gapminder was first modified to include only the entries with the lowest life expectancy for each country. The initial datatable is shown below:
 
 ```{r .csv}
 # Modify gapminder data to include only entries that represent the lowest life expectancy for each country:
@@ -170,23 +172,48 @@ modified <- gapminder %>%
   filter(lifeExp == min_life) %>% 
   ungroup() %>% 
   select(-min_life) %>% 
+  arrange(-year,lifeExp) %>% 
   as_tibble()
 
+DT::datatable(modified)
+```
+
+The dataset was then exported and imported in **csv** format. The `here` package was used to ensure correct paths.
+
+```{r csv export/import}
 # Export to hw05 file:
 write_csv(modified, here::here('hw05','min_life.csv'))
 # Import again:
 imported <- read_csv(here::here('hw05','min_life.csv'))
-# Check for equality:
-all.equal(modified, imported)
 
-# Change classes to factors:
-imported$country = as.factor(imported$country)
-imported$continent = as.factor(imported$continent)
-# Sort by most to least recent, then by lifeExp:
 imported %>% 
   arrange(-year,lifeExp) %>% 
   DT::datatable()
 ```
+
+The imported dataset was then compared to the original using `all.equal()`:
+
+```{r csv check}
+# Check for equality:
+all.equal(modified, imported)
+```
+
+This demonstrates that, despite the tables appearing to be identical, the structure of several variables have been changed. This can be easily fixed:
+
+```{r csv fix}
+
+# Change classes to factors:
+imported$country = as.factor(imported$country)
+imported$continent = as.factor(imported$continent)
+imported$year = as.integer(imported$year)
+imported$pop = as.integer(imported$pop)
+
+all.equal(modified, imported)
+```
+
+The imported csv file is now identical to the original dataset!
+
+An equivalent process was done using .rds format instead of .csv:
 
 ```{r .RDS}
 # Export to hw05 file:
@@ -203,23 +230,29 @@ imported %>%
   DT::datatable()
 ```
 
-
-
+Unlike with .csv, the structures of each variable are maintained, and the datasets are identical!
 
 ## Exercise 4: Visualization design
 
-#### Assignment: #2
+This exercise takes a plot from a previous assignment, and revamps it using the plotting skills learned in class.
+
+The chosen plot is from Assignment 2. Gapminder was filtered to include only population as a variable. The old and new plots were printed side by side using `knitr::include_graphics()`.
+
+**Note:** As `boxplot()` formatted graph cannot be easily used in the `knitr` package, the graphs were first converted to .jpeg in order to plot them side by side.
 
 ```{r Old Plot,out.width="49%",out.height="20%",fig.cap="",fig.show='hold',fig.align='center'}
+# Data:
 pop_only <- gapminder %>%
   select(pop)
   
+# Old plot:
 jpeg(file='old.jpeg')
 boxplot(pop_only$pop, 
         ylab="Population",
         xlab = "")
 dev.off()
 
+# New plot:
 jpeg(file='new.jpeg')
 pop_only %>% 
   ggplot(aes(y=pop)) +
@@ -235,20 +268,26 @@ pop_only %>%
   theme(plot.title = element_text(hjust = 0.5))
 dev.off()
 
-# Converted to .jpeg because grid.arrange won't accept non-ggplot2 plots
+# Print side by side:
 knitr::include_graphics(c("old.jpeg","new.jpeg"))
 ```
 
 ## Exercise 5: Writing figures to file
 
+This exercise explores the different options available for converting plots into .jpeg.
+
+### Implicit
+First, the last plot called in this assignment is implicitly called by not specifying `plot = p`. This gives us the new plot created from Ex. 4. The other parameters will be used as the 'default' parameters for the subsequent graphs.
 
 ```{r Save}
 # Implicitly call last plot (New graph from Q4)
 ggsave('reorder.jpeg', width = 3.5, height = 3.5, dpi = 300)
 ```
 
-### Implicit:
 ![](reorder.jpeg)
+
+### Explicit
+The non-reordered plot from Ex. 2 was then explicitly called by specifying `plot=no_reorder`.
 
 ```{r Save2}
 p <- here::here('hw05')
@@ -257,59 +296,76 @@ p <- here::here('hw05')
 ggsave('no_reorder.jpeg', no_reorder, width = 3.5, height = 3.5, dpi = 300)
 ```
 
-### Explicit:
 ![](no_reorder.jpeg)
+
+### Reduce Height/Width
+The height and width parameters were then reduced 50%.
 
 ```{r Save3}
 # Play with arguments:
 ggsave("small_dim.jpeg", path = p, width = 1.75, height = 1.75, dpi = 300)
 ```
 
-
-### Reduce Height/Width:
 ![](small_dim.jpeg)
+
+This results in a smaller plot, but slightly larger text.
+
+### Reduce DPI
+The DPI was then reduced by 50%.
 
 ```{r Save4}
 # Play with arguments:
 ggsave("low_dpi.jpeg", path = p, width = 3.5, height = 3.5, dpi = 150)
 ```
 
-### Reduce DPI:
 ![](low_dpi.jpeg)
+
+This results in a proportionally smaller plot, as both the plot area and text are reduced.
+
+### Increase DPI
+The DPI was then doubled:
 
 ```{r Save5}
 # Play with arguments:
 ggsave("high_dpi.jpeg", path = p, width = 3.5, height = 3.5, dpi = 600)
 ```
 
-### Increase DPI:
 ![](high_dpi.jpeg)
+
+This results in a plot that looks identical to the 'default' plot, which is likely due to the size limitations of the HTML file. The real jpeg is expected to be twice as large.
+
+# Reduce scale
+The scale was reduced by 50%:
 
 ```{r Save6}
 # Play with arguments:
 ggsave("low_scale.jpeg", path = p, width = 3.5, height = 3.5, dpi = 300, scale = 0.5)
 ```
 
-# Reduce scale:
 ![](low_scale.jpeg)
+
+Identically to reducing the dimensions, only the plot area is reduced.
+
+# Increase scale
+The scale was then doubled:
 
 ```{r Save7}
 # Play with arguments:
 ggsave("high_scale.jpeg", path = p, width = 3.5, height = 3.5, dpi = 300, scale = 2)
 ```
 
-# Increase scale:
 ![](high_scale.jpeg)
+
+This results in a plot where the text appears to have become smaller. Again, it is expected that this is a result of the photo being too large for HTML; the plot area should have doubled, leaving the text unchanged.
+
+### Save in .png format
+Instead of .jpeg, the plot was then saved as .png:
 
 ```{r Save8}
 # Try saving in .png
 ggsave('png.png', width = 3.5, height = 3.5, dpi = 300)
 ```
 
-### Save in .png format:
 ![](png.png)
 
-```{r}
-head(gapminder,5)
-```
-
+This gives an identical graphic to the equivalent .jpeg graphic.
