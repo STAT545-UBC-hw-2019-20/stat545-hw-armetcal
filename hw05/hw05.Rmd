@@ -20,6 +20,7 @@ library(here)
 library(forcats)
 ```
 
+This assignment will explore the incredible virtues of using the `here` package, and demonstrate the subtle complexities of plot specifications.
 
 ## Exercise 1: `here` Package Value
 
@@ -40,28 +41,34 @@ Other perks of the `here` package are that it initializes a dedicated, local wor
 #### Dataset: `gapminder`
 #### Variable: `continent`
 
-In this exercise, the above variable will be identified as a factor
+In this exercise, the `continent` variable will be identified as a factor. Gapminder will then be copied and modified to drop the `Africa` level, plus any other empty levels.
+
+Information about the factor before/after dropping `Africa` was also captured, including the factor class, number of factor levels, and number of total rows in Gapminder.
 
 ```{r ex2}
 # Drop all entries in Africa:
 no_a <- filter(gapminder, continent != 'Africa') %>% 
   droplevels()
 
-gap_coun <- gapminder$country
-noa_coun <- no_a$country
+gap_con <- gapminder$continent
+noa_con <- no_a$continent
 
 # Data information before dropping levels:
-Class <- class(gap_coun) # Class of country column
-Levels <- nlevels(gap_coun) # The number of different values of country
+Class <- class(gap_con) # Class of continent column
+Levels <- nlevels(gap_con) # The number of different values of continent
 Rows <- nrow(gapminder) # Number of gapminder rows before factor mods
 gap_info <- c(Class, Levels, Rows)
 
 # Data information after dropping levels:
-Class <- class(noa_coun) # Class of country column
-Levels <- nlevels(noa_coun) # The number of different values of country
+Class <- class(noa_con) # Class of country column
+Levels <- nlevels(noa_con) # The number of different values of country
 Rows <- nrow(no_a) # Number of gapminder rows after factor mods
 noa_info <- c(Class, Levels, Rows)
+```
 
+THe factor information was summarized in a table, and the structure (`str()`) was printed below for good measure.
+
+```{r ex2 table}
 # Comparison table:
 Values <- c('Class', 'Levels', 'Rows')
 tibble::tibble(Variable = Values,
@@ -69,14 +76,19 @@ tibble::tibble(Variable = Values,
                Post = noa_info) %>% 
   knitr::kable()
 
-str(gap_coun) 
-str(noa_coun) 
+#Print structures:
+str(gap_con) 
+str(noa_con) 
 ```
 
-```{r Figures, warning=FALSE, message=FALSE}
-# Pre-reordering:
+Both the original and re-leveled Gapminder datasets were then modified to include only 2007 data. The % Standard Deviation of the GDP per capita (`% SD 2007`) was found on a per-continent basis using the following formula: `'% SD 2007'= sd(gdpPercap)/mean(gdpPercap)`
 
-# 1. Arrange based on gdpPercap, year:
+The data were then arranged from highest to lowest % standard deviation. Continential ties were broken by arranging from highest to lowest GDP per capita. The results were then printed below as datatables.
+
+```{r Figures, warning=FALSE, message=FALSE}
+#Arrange based on gdpPercap, year:
+
+# Original dataset
 pre <- gapminder %>% 
   filter(year == 2007) %>% 
   group_by(continent) %>% 
@@ -85,6 +97,7 @@ pre <- gapminder %>%
   ungroup() %>% 
   arrange(-`% SD 2007`,-gdpPercap)
 
+# Post-releveling
 post <- no_a %>% 
   filter(year == 2007) %>% 
   group_by(continent) %>% 
@@ -93,9 +106,12 @@ post <- no_a %>%
   ungroup() %>% 
   arrange(-`% SD 2007`,-gdpPercap)
 
+#Print datatables
 DT::datatable(pre)
 DT::datatable(post)
 ```
+
+The releveled dataset was then used to demonstrate the effects of reordering the levels using `fct_reorder()`. A common legend was created using code modified from GitHub (please see References below).
 
 ```{r reordering, message=FALSE}
 # Pre-reordering:
@@ -143,6 +159,8 @@ gridExtra::grid.arrange(no_reorder,reorder + theme(legend.position='none'), leg,
 A common legend was created for the Total GDP graphs by using the code provided by **[Roland](https://stackoverflow.com/users/1412059/roland)** on [StackOverflow](https://stackoverflow.com/questions/13649473/add-a-common-legend-for-combined-ggplots).
 
 ## Exercise 3: File input/output (I/O)
+
+
 
 ```{r .csv}
 # Modify gapminder data to include only entries that represent the lowest life expectancy for each country:
@@ -223,25 +241,24 @@ knitr::include_graphics(c("old.jpeg","new.jpeg"))
 
 ## Exercise 5: Writing figures to file
 
-Graph chosen: `reorder`
 
 ```{r Save}
-p <- here::here('hw05')
-
-# Explicitly call 'no_reorder' plot as tiny phot:
-ggsave('no_reorder.jpeg', no_reorder, width = 3.5, height = 3.5, dpi = 300)
-```
-
-### Explicit:
-![](no_reorder.jpeg)
-
-```{r Save2}
-# Implicitly call last plot ('reorder')
+# Implicitly call last plot (New graph from Q4)
 ggsave('reorder.jpeg', width = 3.5, height = 3.5, dpi = 300)
 ```
 
 ### Implicit:
 ![](reorder.jpeg)
+
+```{r Save2}
+p <- here::here('hw05')
+
+# Explicitly call 'no_reorder' plot:
+ggsave('no_reorder.jpeg', no_reorder, width = 3.5, height = 3.5, dpi = 300)
+```
+
+### Explicit:
+![](no_reorder.jpeg)
 
 ```{r Save3}
 # Play with arguments:
@@ -292,5 +309,7 @@ ggsave('png.png', width = 3.5, height = 3.5, dpi = 300)
 ### Save in .png format:
 ![](png.png)
 
-
+```{r}
+head(gapminder,5)
+```
 
